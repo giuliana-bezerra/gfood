@@ -86,3 +86,16 @@ $ ./build-and-run.sh
 ```
 
 The APIs will be available in Swagger-UI: http://localhost:8080/swagger-ui.html.
+
+## Developing
+
+Adding more functionality to gfood requires following the steps below to maintain consistency with modular monolith architecture:
+
+* Create a new spring boot project for the new service (ex: gfood-payment-service)
+* Create a new spring boot project for the service api (ex: gfood-payment-service-api)
+* Import the new ServiceConfig class in `GfoodApplication`
+* Create new domain classes and repositories inside `gfood-domain`
+* Create any common class inside `gfood-common`
+* Create new migrations inside `gfood-flyway`
+* Add tests inside gfood-end-to-end-tests
+* Change build scripts to build and test/run the new project
