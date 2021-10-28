@@ -17,7 +17,4 @@ public class CreateConsumerRequest {
 
     this.name = name;
   }
-
-  private CreateConsumerRequest() {
-  }
 }

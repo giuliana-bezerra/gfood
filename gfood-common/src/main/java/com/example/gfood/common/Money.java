@@ -18,9 +18,6 @@ public class Money {
 
   private BigDecimal amount;
 
-  private Money() {
-  }
-
   public Money(BigDecimal amount) {
     this.amount = amount;
   }

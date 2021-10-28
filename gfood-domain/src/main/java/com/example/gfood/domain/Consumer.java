@@ -21,9 +21,6 @@ public class Consumer {
   @Embedded
   private PersonName name;
 
-  private Consumer() {
-  }
-
   public Consumer(PersonName name) {
     this.name = name;
   }
