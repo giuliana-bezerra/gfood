@@ -28,6 +28,11 @@ public class Consumer {
     this.name = name;
   }
 
+  public Consumer(Long id, PersonName name) {
+    this.id = id;
+    this.name = name;
+  }
+
   public Long getId() {
     return id;
   }

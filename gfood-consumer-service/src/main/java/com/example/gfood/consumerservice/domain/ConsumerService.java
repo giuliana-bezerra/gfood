@@ -13,7 +13,7 @@ public class ConsumerService {
   @Autowired
   private ConsumerRepository consumerRepository;
 
-  public Optional<Consumer> findById(long consumerId) {
+  public Optional<Consumer> findById(Long consumerId) {
     return consumerRepository.findById(consumerId);
   }
 
@@ -24,8 +24,7 @@ public class ConsumerService {
 
   public void validateOrderForConsumer(long consumerId, Money orderTotal) {
     Optional<Consumer> consumer = consumerRepository.findById(consumerId);
-    Optional<Boolean> consumerOrder = consumer.orElseThrow(ConsumerNotFoundException::new)
-        .validateOrderByConsumer(orderTotal);
-    consumerOrder.orElseThrow(ConsumerOrderInvalidException::new);
+    consumer.orElseThrow(ConsumerNotFoundException::new).validateOrderByConsumer(orderTotal)
+        .orElseThrow(ConsumerOrderInvalidException::new);
   }
 }
