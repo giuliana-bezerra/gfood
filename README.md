@@ -88,7 +88,7 @@ $ ./build-and-run.sh
 
 The APIs will be available in Swagger-UI: http://localhost:8080/swagger-ui.html.
 
-## 💻 Developing
+## 👩‍💻 Developing
 
 Adding more functionality to gfood requires following the steps below to maintain consistency with modular monolith architecture:
 
@@ -98,5 +98,6 @@ Adding more functionality to gfood requires following the steps below to maintai
 - Create new domain classes and repositories inside `gfood-domain`
 - Create any common class inside `gfood-common`
 - Create new migrations inside `gfood-flyway`
-- Add tests inside gfood-end-to-end-tests
-- Change build scripts to build and test/run the new project
+- Add unit tests inside the new service project
+- Add integration tests inside gfood-end-to-end-tests
+- Change scripts to build and test/run the new project
