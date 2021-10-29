@@ -27,6 +27,7 @@
 - [Springdoc](https://github.com/springdoc/springdoc-openapi)
 - [Mysql](https://dev.mysql.com/downloads/mysql/)
 - [Flyway](https://flywaydb.org/documentation/usage/maven/)
+- [Spring Testing](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html#testing-introduction)
 
 ## 💻 Project
 

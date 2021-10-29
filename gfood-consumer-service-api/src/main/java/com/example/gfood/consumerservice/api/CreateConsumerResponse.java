@@ -3,6 +3,13 @@ package com.example.gfood.consumerservice.api;
 public class CreateConsumerResponse {
   private Long consumerId;
 
+  public CreateConsumerResponse() {
+  }
+
+  public CreateConsumerResponse(Long consumerId) {
+    this.consumerId = consumerId;
+  }
+
   public Long getConsumerId() {
     return consumerId;
   }
@@ -11,11 +18,4 @@ public class CreateConsumerResponse {
     this.consumerId = consumerId;
   }
 
-  public CreateConsumerResponse() {
-
-  }
-
-  public CreateConsumerResponse(Long consumerId) {
-    this.consumerId = consumerId;
-  }
 }

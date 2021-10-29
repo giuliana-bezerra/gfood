@@ -11,8 +11,11 @@ import javax.persistence.Table;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.PersonName;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 @Entity
 @Table(name = "consumers")
+@DynamicUpdate
 public class Consumer {
   @Id
   @GeneratedValue
@@ -20,6 +23,10 @@ public class Consumer {
 
   @Embedded
   private PersonName name;
+
+  public Consumer() {
+
+  }
 
   public Consumer(PersonName name) {
     this.name = name;
