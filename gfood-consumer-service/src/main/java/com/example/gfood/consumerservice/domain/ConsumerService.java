@@ -8,6 +8,7 @@ import com.example.gfood.domain.Consumer;
 import com.example.gfood.domain.ConsumerRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 public class ConsumerService {
   @Autowired
@@ -17,6 +18,7 @@ public class ConsumerService {
     return consumerRepository.findById(consumerId);
   }
 
+  @Transactional
   public Consumer create(PersonName name) {
     Consumer consumer = consumerRepository.save(new Consumer(name));
     return consumer;

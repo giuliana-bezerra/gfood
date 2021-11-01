@@ -11,6 +11,7 @@ import com.example.gfood.restaurantservice.api.CreateRestaurantRequest;
 import com.example.gfood.restaurantservice.api.RestaurantMenuDTO;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 public class RestaurantService {
   @Autowired
@@ -20,6 +21,7 @@ public class RestaurantService {
     return restaurantRepository.findById(restaurantId);
   }
 
+  @Transactional
   public Restaurant create(CreateRestaurantRequest request) {
     Restaurant restaurant = new Restaurant(request.getName(), request.getAddress(),
         makeRestaurantMenu(request.getMenu()));

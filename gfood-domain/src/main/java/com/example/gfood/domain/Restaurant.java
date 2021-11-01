@@ -13,6 +13,9 @@ import javax.persistence.Table;
 
 import com.example.gfood.common.Address;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
@@ -40,6 +43,12 @@ public class Restaurant {
     this.name = name;
     this.address = address;
     this.menuItens = menu.getMenuItens();
+  }
+
+  public Restaurant(Long id, String name, Address address) {
+    this.id = id;
+    this.name = name;
+    this.address = address;
   }
 
   public Restaurant(Long id, String name, Address address, RestaurantMenu menu) {
@@ -83,5 +92,20 @@ public class Restaurant {
 
   public Optional<MenuItem> findMenuItem(String menuItemId) {
     return menuItens.stream().filter(menuItem -> menuItem.getId().equals(menuItemId)).findFirst();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o);
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
   }
 }

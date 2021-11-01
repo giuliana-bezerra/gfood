@@ -45,12 +45,12 @@ public class RestaurantControllerTest {
   public void shouldReturnRestaurantById() throws Exception {
     List<MenuItem> menuItems = new ArrayList<>() {
       {
-        add(new MenuItem("1", "Feijão Tropeiro", new Money("50.20")));
+        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
       }
     };
 
-    Restaurant restaurant = new Restaurant(1L, "Restaurante", new Address("Rua 1", "Rua 2", "Cidade", "Estado", "Cep"),
-        new RestaurantMenu(menuItems));
+    Restaurant restaurant = new Restaurant(1L, "Restaurante",
+        new Address("Street 1", "Street 2", "City", "State", "Zip"), new RestaurantMenu(menuItems));
 
     GetRestaurantResponse response = new GetRestaurantResponse(restaurant.getId(), restaurant.getName());
     String urlTemplate = "/restaurants/" + restaurant.getId();
