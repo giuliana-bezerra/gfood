@@ -9,12 +9,13 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>gfood-application</artifactId>
+	<artifactId>gfood-courier-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>gfood-application</name>
-	<description>Gfood - a delivery app using modular monolith architecture.</description>
+	<name>gfood-courier-service</name>
+	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
+		<spring-boot.repackage.skip>true</spring-boot.repackage.skip>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -24,55 +25,24 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.example</groupId>
-			<artifactId>gfood-consumer-service</artifactId>
+			<artifactId>gfood-domain</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.example</groupId>
-			<artifactId>gfood-restaurant-service</artifactId>
+			<artifactId>gfood-courier-service-api</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>gfood-courier-service</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>gfood-swagger</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.example</groupId>
-			<artifactId>gfood-end-to-end-tests</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-			<classifier>tests</classifier>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

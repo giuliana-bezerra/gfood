@@ -9,6 +9,8 @@ echo Building all projects...
 ./gfood-consumer-service/mvnw clean install -f ./gfood-consumer-service/pom.xml -Dmaven.test.skip=true
 ./gfood-restaurant-service-api/mvnw install -f ./gfood-restaurant-service-api/pom.xml -Dmaven.test.skip=true
 ./gfood-restaurant-service/mvnw install -f ./gfood-restaurant-service/pom.xml -Dmaven.test.skip=true
+./gfood-courier-service-api/mvnw install -f ./gfood-courier-service-api/pom.xml -Dmaven.test.skip=true
+./gfood-courier-service/mvnw install -f ./gfood-courier-service/pom.xml -Dmaven.test.skip=true
 ./gfood-application/mvnw clean install -f ./gfood-application/pom.xml -Dmaven.test.skip=true
 
 echo Running gfood...

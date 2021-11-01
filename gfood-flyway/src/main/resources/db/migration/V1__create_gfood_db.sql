@@ -8,7 +8,7 @@ create table consumers
   primary key (id)
 ) engine = InnoDB;
 
-create table courier
+create table couriers
 (
   id                       bigint not null auto_increment,
   available bit,

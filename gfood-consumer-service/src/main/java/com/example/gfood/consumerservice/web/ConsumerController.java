@@ -22,7 +22,6 @@ public class ConsumerController {
 
   @RequestMapping(method = RequestMethod.GET, path = "/{consumerId}", produces = { "application/json; charset=UTF-8" })
   public ResponseEntity<GetConsumerResponse> get(@PathVariable Long consumerId) {
-    System.out.println(consumerId);
     return consumerService.findById(consumerId).map(
         consumer -> new ResponseEntity<>(new GetConsumerResponse(consumer.getId(), consumer.getName()), HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
