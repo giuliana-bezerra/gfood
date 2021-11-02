@@ -1,5 +1,7 @@
 package com.example.gfood.courierservice.web;
 
+import com.example.gfood.courierservice.api.CreateCourierRequest;
+import com.example.gfood.courierservice.api.CreateCourierResponse;
 import com.example.gfood.courierservice.api.GetCourierResponse;
 import com.example.gfood.courierservice.domain.CourierService;
 
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,5 +27,12 @@ public class CourierController {
             new GetCourierResponse(courier.getId(), courier.getName(), courier.getAddress(), courier.isAvailable()),
             HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
+  }
+
+  @RequestMapping(path = "/couriers", method = RequestMethod.POST)
+  public ResponseEntity<CreateCourierResponse> create(@RequestBody CreateCourierRequest request) {
+    return new ResponseEntity<>(
+        new CreateCourierResponse(courierService.create(request.getName(), request.getAddress()).getId()),
+        HttpStatus.CREATED);
   }
 }

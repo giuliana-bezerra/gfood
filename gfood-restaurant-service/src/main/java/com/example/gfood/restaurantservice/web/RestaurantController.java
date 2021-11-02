@@ -30,7 +30,8 @@ public class RestaurantController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public CreateRestaurantResponse create(@RequestBody CreateRestaurantRequest request) {
-    return new CreateRestaurantResponse(restaurantService.create(request).getId());
+  public ResponseEntity<CreateRestaurantResponse> create(@RequestBody CreateRestaurantRequest request) {
+    return new ResponseEntity<>(new CreateRestaurantResponse(restaurantService.create(request).getId()),
+        HttpStatus.CREATED);
   }
 }

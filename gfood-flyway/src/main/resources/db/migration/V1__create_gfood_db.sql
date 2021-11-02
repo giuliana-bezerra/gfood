@@ -97,13 +97,13 @@ alter table courier_actions
   add constraint courier_actions_order_id foreign key (order_id) references orders (id);
 
 alter table courier_actions
-  add constraint courier_actions_courier_id foreign key (courier_id) references courier (id);
+  add constraint courier_actions_courier_id foreign key (courier_id) references couriers (id);
 
 alter table order_line_items
   add constraint order_line_items_id foreign key (order_id) references orders (id);
 
 alter table orders
-  add constraint orders_assigned_courier_id foreign key (assigned_courier_id) references courier (id);
+  add constraint orders_assigned_courier_id foreign key (assigned_courier_id) references couriers (id);
 
 alter table orders
   add constraint orders_restaurant_id foreign key (restaurant_id) references restaurants (id);

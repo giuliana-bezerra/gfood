@@ -12,7 +12,6 @@ import com.example.gfood.common.Address;
 import com.example.gfood.common.Money;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Restaurant;
-import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.restaurantservice.api.CreateRestaurantRequest;
 import com.example.gfood.restaurantservice.api.MenuItemDTO;
@@ -58,10 +57,12 @@ public class RestaurantServiceTest {
     RestaurantMenuDTO menu = new RestaurantMenuDTO(menuItems);
     CreateRestaurantRequest request = new CreateRestaurantRequest(name, address, menu);
 
-    assertEquals(new Restaurant(name, address, new RestaurantMenu(new ArrayList<>() {
+    assertEquals(name, service.create(request).getName());
+    assertEquals(address, service.create(request).getAddress());
+    assertEquals(new ArrayList<>() {
       {
         add(new MenuItem("1", "Feijão Tropeiro", new Money("50.20")));
       }
-    })), service.create(request));
+    }, service.create(request).getMenuItens());
   }
 }

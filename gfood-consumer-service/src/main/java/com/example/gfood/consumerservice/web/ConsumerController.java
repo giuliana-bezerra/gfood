@@ -4,6 +4,7 @@ import com.example.gfood.consumerservice.api.CreateConsumerRequest;
 import com.example.gfood.consumerservice.api.CreateConsumerResponse;
 import com.example.gfood.consumerservice.api.GetConsumerResponse;
 import com.example.gfood.consumerservice.domain.ConsumerService;
+import com.example.gfood.domain.Consumer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,8 @@ public class ConsumerController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public CreateConsumerResponse create(@RequestBody CreateConsumerRequest request) {
-    return new CreateConsumerResponse(consumerService.create(request.getName()).getId());
+  public ResponseEntity<CreateConsumerResponse> create(@RequestBody CreateConsumerRequest request) {
+    Consumer consumer = consumerService.create(request.getName());
+    return new ResponseEntity<>(new CreateConsumerResponse(consumer.getId()), HttpStatus.CREATED);
   }
 }
