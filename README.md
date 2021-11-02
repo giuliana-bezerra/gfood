@@ -46,7 +46,7 @@ Gfood was designed in several modules, each with its own responsability:
 - gfood-domain: Domain classes and repositories that map database structures.
 - gfood-end-to-end-tests: Integration tests of all functionalities.
 - gfood-flyway: Migrations that create gfood database structures.
-- gfood-swagger: Swagger UI containing all gfood APIs.
+- gfood-swagger: Swagger UI configuring all gfood APIs.
 
 Each project generates its own jar file, which are dependencies of gfood-application. The following diagram shows gfood in terms of its services and related functionalities:
 
