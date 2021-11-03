@@ -10,12 +10,14 @@ import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.restaurantservice.api.CreateRestaurantRequest;
 import com.example.gfood.restaurantservice.api.RestaurantMenuDTO;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 public class RestaurantService {
-  @Autowired
   private RestaurantRepository restaurantRepository;
+
+  public RestaurantService(RestaurantRepository restaurantRepository) {
+    this.restaurantRepository = restaurantRepository;
+  }
 
   public Optional<Restaurant> findById(Long restaurantId) {
     return restaurantRepository.findById(restaurantId);
