@@ -38,7 +38,7 @@ create table hibernate_sequence
 insert into hibernate_sequence
 values (1);
 
-create table order_line_items
+create table order_items
 (
   order_id     bigint  not null,
   menu_item_id varchar(255),
@@ -99,8 +99,8 @@ alter table courier_actions
 alter table courier_actions
   add constraint courier_actions_courier_id foreign key (courier_id) references couriers (id);
 
-alter table order_line_items
-  add constraint order_line_items_id foreign key (order_id) references orders (id);
+alter table order_items
+  add constraint order_items_id foreign key (order_id) references orders (id);
 
 alter table orders
   add constraint orders_assigned_courier_id foreign key (assigned_courier_id) references couriers (id);

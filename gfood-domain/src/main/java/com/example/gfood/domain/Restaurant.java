@@ -40,6 +40,10 @@ public class Restaurant {
   public Restaurant() {
   }
 
+  public Restaurant(Long id) {
+    this.id = id;
+  }
+
   public Restaurant(String name, Address address, RestaurantMenu menu) {
     this.name = name;
     this.address = address;

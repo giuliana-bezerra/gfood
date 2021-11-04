@@ -14,4 +14,6 @@ echo Building all projects...
 ./gfood-restaurant-service/mvnw install -f ./gfood-restaurant-service/pom.xml
 ./gfood-courier-service-api/mvnw install -f ./gfood-courier-service-api/pom.xml
 ./gfood-courier-service/mvnw install -f ./gfood-courier-service/pom.xml
+./gfood-order-service-api/mvnw install -f ./gfood-order-service-api/pom.xml
+./gfood-order-service/mvnw install -f ./gfood-order-service/pom.xml
 ./gfood-application/mvnw install -f ./gfood-application/pom.xml
