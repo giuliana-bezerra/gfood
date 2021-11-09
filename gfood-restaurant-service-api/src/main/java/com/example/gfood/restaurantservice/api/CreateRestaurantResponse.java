@@ -4,7 +4,6 @@ public class CreateRestaurantResponse {
   private Long id;
 
   public CreateRestaurantResponse() {
-
   }
 
   public CreateRestaurantResponse(Long id) {
@@ -13,10 +12,6 @@ public class CreateRestaurantResponse {
 
   public Long getId() {
     return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
   }
 
 }

@@ -20,32 +20,16 @@ public class GetCourierResponse {
     return id;
   }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
-
   public PersonName getName() {
     return name;
-  }
-
-  public void setName(PersonName name) {
-    this.name = name;
   }
 
   public Address getAddress() {
     return address;
   }
 
-  public void setAddress(Address address) {
-    this.address = address;
-  }
-
   public Boolean getAvailable() {
     return available;
-  }
-
-  public void setAvailable(Boolean available) {
-    this.available = available;
   }
 
 }

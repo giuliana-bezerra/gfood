@@ -1,22 +1,17 @@
 package com.example.gfood.orderservice.api;
 
 public class CreateOrderResponse {
-  private Long orderId;
+  private Long id;
 
   public CreateOrderResponse() {
-
   }
 
-  public CreateOrderResponse(Long orderId) {
-    this.orderId = orderId;
+  public CreateOrderResponse(Long id) {
+    this.id = id;
   }
 
-  public Long getOrderId() {
-    return orderId;
-  }
-
-  public void setOrderId(Long orderId) {
-    this.orderId = orderId;
+  public Long getId() {
+    return id;
   }
 
 }

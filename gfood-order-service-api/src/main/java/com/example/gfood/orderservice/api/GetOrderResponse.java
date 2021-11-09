@@ -3,7 +3,7 @@ package com.example.gfood.orderservice.api;
 import com.example.gfood.common.Money;
 
 public class GetOrderResponse {
-  private Long orderId;
+  private Long id;
   private Money orderTotal;
   private String restaurantName;
 
@@ -11,34 +11,22 @@ public class GetOrderResponse {
 
   }
 
-  public GetOrderResponse(Long orderId, Money orderTotal, String restaurantName) {
-    this.orderId = orderId;
+  public GetOrderResponse(Long id, Money orderTotal, String restaurantName) {
+    this.id = id;
     this.orderTotal = orderTotal;
     this.restaurantName = restaurantName;
   }
 
-  public Long getOrderId() {
-    return orderId;
-  }
-
-  public void setOrderId(Long orderId) {
-    this.orderId = orderId;
+  public Long getId() {
+    return id;
   }
 
   public Money getOrderTotal() {
     return orderTotal;
   }
 
-  public void setOrderTotal(Money orderTotal) {
-    this.orderTotal = orderTotal;
-  }
-
   public String getRestaurantName() {
     return restaurantName;
-  }
-
-  public void setRestaurantName(String restaurantName) {
-    this.restaurantName = restaurantName;
   }
 
 }
