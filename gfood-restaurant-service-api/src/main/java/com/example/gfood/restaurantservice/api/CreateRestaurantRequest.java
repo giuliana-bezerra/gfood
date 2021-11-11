@@ -1,5 +1,8 @@
 package com.example.gfood.restaurantservice.api;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import com.example.gfood.common.Address;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -7,7 +10,10 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class CreateRestaurantRequest {
+  @NotNull(message = "Name is required.")
   private String name;
+  @NotNull(message = "Menu is required.")
+  @Valid
   private RestaurantMenuDTO menu;
   private Address address;
 

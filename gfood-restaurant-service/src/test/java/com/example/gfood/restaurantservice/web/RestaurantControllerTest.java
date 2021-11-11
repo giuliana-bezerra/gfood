@@ -101,4 +101,29 @@ public class RestaurantControllerTest {
         .andExpect(content().string(objectMapper.writeValueAsString(response)));
   }
 
+  @Test
+  public void shouldNotCreateInvalidRestaurant() throws Exception {
+    mockMvc.perform(
+        post("/restaurants").content(objectMapper.writeValueAsString(new CreateRestaurantRequest(null, null, null)))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print()).andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/restaurants")
+        .content(objectMapper
+            .writeValueAsString(new CreateRestaurantRequest("Name", new Address(), new RestaurantMenuDTO())))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/restaurants")
+        .content(objectMapper.writeValueAsString(
+            new CreateRestaurantRequest("Name", new Address(), new RestaurantMenuDTO(new ArrayList<MenuItemDTO>()))))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/restaurants").content(objectMapper.writeValueAsString(
+        new CreateRestaurantRequest("Name", new Address(), new RestaurantMenuDTO(new ArrayList<MenuItemDTO>() {
+          {
+            add(new MenuItemDTO(null, null, null));
+          }
+        })))).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+  }
+
 }

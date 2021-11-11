@@ -2,12 +2,17 @@ package com.example.gfood.restaurantservice.api;
 
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class RestaurantMenuDTO {
-  private List<MenuItemDTO> menuItems;
+  @NotEmpty(message = "Menu items are required.")
+  private List<@Valid MenuItemDTO> menuItems;
 
   public RestaurantMenuDTO() {
 

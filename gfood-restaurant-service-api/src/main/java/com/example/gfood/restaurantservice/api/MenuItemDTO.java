@@ -1,5 +1,9 @@
 package com.example.gfood.restaurantservice.api;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 import com.example.gfood.common.Money;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -7,8 +11,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class MenuItemDTO {
+  @NotBlank(message = "Id is required.")
   private String id;
+  @NotBlank(message = "Name is required.")
   private String name;
+  @NotNull(message = "Price is required.")
   private Money price;
 
   public MenuItemDTO(String id, String name, Money price) {

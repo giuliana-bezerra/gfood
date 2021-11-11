@@ -72,4 +72,14 @@ public class CourierControllerTest {
         .andDo(print()).andExpect(status().isCreated())
         .andExpect(content().string(objectMapper.writeValueAsString(response)));
   }
+
+  @Test
+  public void shouldNotCreateInvalidCourier() throws Exception {
+    mockMvc.perform(post("/couriers").content(objectMapper.writeValueAsString(new CreateCourierRequest()))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/couriers")
+        .content(objectMapper.writeValueAsString(new CreateCourierRequest(new PersonName(null, null), new Address())))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+  }
 }

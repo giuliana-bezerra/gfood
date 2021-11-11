@@ -1,9 +1,14 @@
 package com.example.gfood.courierservice.api;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import com.example.gfood.common.Address;
 import com.example.gfood.common.PersonName;
 
 public class CreateCourierRequest {
+  @NotNull(message = "Name is required.")
+  @Valid
   private PersonName name;
   private Address address;
 

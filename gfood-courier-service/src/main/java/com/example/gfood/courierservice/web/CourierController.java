@@ -1,5 +1,7 @@
 package com.example.gfood.courierservice.web;
 
+import javax.validation.Valid;
+
 import com.example.gfood.courierservice.api.CreateCourierRequest;
 import com.example.gfood.courierservice.api.CreateCourierResponse;
 import com.example.gfood.courierservice.api.GetCourierResponse;
@@ -30,7 +32,7 @@ public class CourierController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public ResponseEntity<CreateCourierResponse> create(@RequestBody CreateCourierRequest request) {
+  public ResponseEntity<CreateCourierResponse> create(@RequestBody @Valid CreateCourierRequest request) {
     return new ResponseEntity<>(
         new CreateCourierResponse(courierService.create(request.getName(), request.getAddress()).getId()),
         HttpStatus.CREATED);

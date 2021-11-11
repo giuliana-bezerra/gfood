@@ -1,5 +1,7 @@
 package com.example.gfood.restaurantservice.web;
 
+import javax.validation.Valid;
+
 import com.example.gfood.restaurantservice.api.CreateRestaurantRequest;
 import com.example.gfood.restaurantservice.api.CreateRestaurantResponse;
 import com.example.gfood.restaurantservice.api.GetRestaurantResponse;
@@ -30,7 +32,7 @@ public class RestaurantController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public ResponseEntity<CreateRestaurantResponse> create(@RequestBody CreateRestaurantRequest request) {
+  public ResponseEntity<CreateRestaurantResponse> create(@RequestBody @Valid CreateRestaurantRequest request) {
     return new ResponseEntity<>(new CreateRestaurantResponse(restaurantService.create(request).getId()),
         HttpStatus.CREATED);
   }
