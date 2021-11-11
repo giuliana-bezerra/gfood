@@ -29,7 +29,7 @@ public class CourierController {
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
   }
 
-  @RequestMapping(path = "/couriers", method = RequestMethod.POST)
+  @RequestMapping(method = RequestMethod.POST)
   public ResponseEntity<CreateCourierResponse> create(@RequestBody CreateCourierRequest request) {
     return new ResponseEntity<>(
         new CreateCourierResponse(courierService.create(request.getName(), request.getAddress()).getId()),

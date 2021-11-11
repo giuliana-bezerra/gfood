@@ -41,6 +41,13 @@ public class Order {
     this.orderItems = new OrderItems(orderItems);
   }
 
+  public Order(Long id, Long consumerId, Restaurant restaurant, List<OrderItem> orderItems) {
+    this.id = id;
+    this.consumerId = consumerId;
+    this.restaurant = restaurant;
+    this.orderItems = new OrderItems(orderItems);
+  }
+
   public Money getOrderTotal() {
     System.out.println(orderItems.orderTotal());
     return orderItems.orderTotal();

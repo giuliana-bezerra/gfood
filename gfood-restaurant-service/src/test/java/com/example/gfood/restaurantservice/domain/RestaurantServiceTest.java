@@ -12,6 +12,7 @@ import com.example.gfood.common.Address;
 import com.example.gfood.common.Money;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Restaurant;
+import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.restaurantservice.api.CreateRestaurantRequest;
 import com.example.gfood.restaurantservice.api.MenuItemDTO;
@@ -49,20 +50,18 @@ public class RestaurantServiceTest {
   public void shouldCreateRestaurant() {
     List<MenuItemDTO> menuItems = new ArrayList<>() {
       {
-        add(new MenuItemDTO("1", "Feijão Tropeiro", new Money("50.20")));
+        add(new MenuItemDTO("1", "Cheeseburger", new Money("50.20")));
       }
     };
     String name = "Restaurant";
     Address address = new Address("Street 1", "Street 2", "City", "State", "Zip");
     RestaurantMenuDTO menu = new RestaurantMenuDTO(menuItems);
     CreateRestaurantRequest request = new CreateRestaurantRequest(name, address, menu);
-
-    assertEquals(name, service.create(request).getName());
-    assertEquals(address, service.create(request).getAddress());
-    assertEquals(new ArrayList<>() {
+    Restaurant restaurant = service.create(request);
+    assertEquals(new Restaurant(name, address, new RestaurantMenu(new ArrayList<>() {
       {
-        add(new MenuItem("1", "Feijão Tropeiro", new Money("50.20")));
+        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
       }
-    }, service.create(request).getMenuItens());
+    })), restaurant);
   }
 }

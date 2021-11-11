@@ -1,5 +1,7 @@
 package com.example.gfood.consumerservice.web;
 
+import javax.validation.Valid;
+
 import com.example.gfood.consumerservice.api.CreateConsumerRequest;
 import com.example.gfood.consumerservice.api.CreateConsumerResponse;
 import com.example.gfood.consumerservice.api.GetConsumerResponse;
@@ -28,7 +30,7 @@ public class ConsumerController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public ResponseEntity<CreateConsumerResponse> create(@RequestBody CreateConsumerRequest request) {
+  public ResponseEntity<CreateConsumerResponse> create(@RequestBody @Valid CreateConsumerRequest request) {
     return new ResponseEntity<>(new CreateConsumerResponse(consumerService.create(request.getName()).getId()),
         HttpStatus.CREATED);
   }
