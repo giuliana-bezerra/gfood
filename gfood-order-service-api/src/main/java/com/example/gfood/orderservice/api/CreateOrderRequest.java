@@ -2,10 +2,20 @@ package com.example.gfood.orderservice.api;
 
 import java.util.List;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+
 public class CreateOrderRequest {
+  @NotNull(message = "Restaurant is required.")
+  @Positive(message = "Restaurant is required.")
   private Long restaurantId;
+  @NotNull(message = "Consumer is required.")
+  @Positive(message = "Consumer is required.")
   private Long consumerId;
-  private List<OrderItemDTO> orderItems;
+  @NotEmpty(message = "Order items are required.")
+  private List<@Valid OrderItemDTO> orderItems;
 
   public CreateOrderRequest() {
 

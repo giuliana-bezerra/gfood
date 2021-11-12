@@ -16,7 +16,6 @@ import com.example.gfood.consumerservice.api.GetConsumerResponse;
 import com.example.gfood.consumerservice.domain.ConsumerService;
 import com.example.gfood.consumerservice.main.ConsumerServiceConfig;
 import com.example.gfood.domain.Consumer;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;

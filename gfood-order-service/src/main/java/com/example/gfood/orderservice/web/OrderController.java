@@ -1,13 +1,12 @@
 package com.example.gfood.orderservice.web;
 
-import java.util.stream.Collectors;
+import javax.validation.Valid;
 
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
 import com.example.gfood.orderservice.domain.OrderService;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,7 +31,7 @@ public class OrderController {
   }
 
   @RequestMapping(method = RequestMethod.POST)
-  public ResponseEntity<CreateOrderResponse> create(@RequestBody CreateOrderRequest request) {
+  public ResponseEntity<CreateOrderResponse> create(@RequestBody @Valid CreateOrderRequest request) {
     return new ResponseEntity<CreateOrderResponse>(
         new CreateOrderResponse(
             orderService.create(request.getConsumerId(), request.getRestaurantId(), request.getOrderItems()).getId()),
