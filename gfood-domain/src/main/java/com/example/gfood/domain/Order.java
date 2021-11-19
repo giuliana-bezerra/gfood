@@ -2,13 +2,14 @@ package com.example.gfood.domain;
 
 import java.util.List;
 
-import javax.persistence.Embedded;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.example.gfood.common.Money;
@@ -28,8 +29,8 @@ public class Order {
   @ManyToOne(fetch = FetchType.LAZY)
   private Restaurant restaurant;
 
-  @Embedded
-  private OrderItems orderItems;
+  @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = CascadeType.ALL)
+  private List<OrderItem> orderItems;
 
   public Order() {
 
@@ -38,19 +39,18 @@ public class Order {
   public Order(Long consumerId, Restaurant restaurant, List<OrderItem> orderItems) {
     this.consumerId = consumerId;
     this.restaurant = restaurant;
-    this.orderItems = new OrderItems(orderItems);
+    setOrderItems(orderItems);
   }
 
   public Order(Long id, Long consumerId, Restaurant restaurant, List<OrderItem> orderItems) {
     this.id = id;
     this.consumerId = consumerId;
     this.restaurant = restaurant;
-    this.orderItems = new OrderItems(orderItems);
+    setOrderItems(orderItems);
   }
 
   public Money getOrderTotal() {
-    System.out.println(orderItems.orderTotal());
-    return orderItems.orderTotal();
+    return orderItems.stream().map(OrderItem::getTotal).reduce(Money.ZERO, Money::add);
   }
 
   public Long getId() {
@@ -77,12 +77,12 @@ public class Order {
     this.restaurant = restaurant;
   }
 
-  public OrderItems getOrderItems() {
+  public List<OrderItem> getOrderItems() {
     return orderItems;
   }
 
-  public void setOrderItems(OrderItems orderItems) {
+  public void setOrderItems(List<OrderItem> orderItems) {
     this.orderItems = orderItems;
+    this.orderItems.stream().forEach(orderItem -> orderItem.setOrder(this));
   }
-
 }

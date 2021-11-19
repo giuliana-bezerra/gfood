@@ -27,13 +27,18 @@ public class OrderService {
     this.consumerService = consumerService;
   }
 
-  public Optional<Order> findById(Long consumerId) {
-    return orderRepository.findById(consumerId);
+  public Optional<Order> findById(Long orderId) {
+    return orderRepository.findById(orderId);
+  }
+
+  public List<Order> list(Long consumerId) {
+    return orderRepository.findByConsumerId(consumerId);
   }
 
   @Transactional
   public Order create(Long consumerId, Long restaurantId, List<OrderItemDTO> orderItems) {
     Order order = new Order(consumerId, new Restaurant(restaurantId), makeOrderItems(orderItems, restaurantId));
+
     consumerService.validateOrderForConsumer(consumerId, order.getOrderTotal());
     orderRepository.save(order);
     return order;

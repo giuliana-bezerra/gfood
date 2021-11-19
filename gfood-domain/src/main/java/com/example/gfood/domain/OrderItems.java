@@ -5,12 +5,13 @@ import java.util.List;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
 
 import com.example.gfood.common.Money;
 
 @Embeddable
 public class OrderItems {
-  @ElementCollection
+  @ElementCollection(fetch = FetchType.LAZY)
   @CollectionTable(name = "order_items")
   private List<OrderItem> orderItems;
 

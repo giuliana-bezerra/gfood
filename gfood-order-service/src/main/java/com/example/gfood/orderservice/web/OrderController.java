@@ -1,5 +1,8 @@
 package com.example.gfood.orderservice.web;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 
 import com.example.gfood.orderservice.api.CreateOrderRequest;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,6 +32,15 @@ public class OrderController {
         .map(order -> new ResponseEntity<GetOrderResponse>(
             new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName()), HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
+  }
+
+  @RequestMapping(method = RequestMethod.GET)
+  public ResponseEntity<List<GetOrderResponse>> list(@RequestParam Long consumerId) {
+    List<GetOrderResponse> response = orderService.list(consumerId).stream()
+        .map(order -> new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName()))
+        .collect(Collectors.toList());
+
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @RequestMapping(method = RequestMethod.POST)

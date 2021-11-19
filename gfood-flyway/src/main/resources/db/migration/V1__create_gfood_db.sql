@@ -2,7 +2,7 @@ use gfood;
 
 create table consumers
 (
-  id         bigint not null,
+  id         bigint not null auto_increment,
   first_name varchar(255),
   last_name  varchar(255),
   primary key (id)
@@ -40,11 +40,13 @@ values (1);
 
 create table order_items
 (
+  id                       bigint not null auto_increment,
   order_id     bigint  not null,
   menu_item_id varchar(255),
   name         varchar(255),
   price        decimal(19, 2),
-  quantity     integer not null
+  quantity     integer not null,
+  primary key (id)
 ) engine = InnoDB;
 
 create table orders

@@ -2,8 +2,14 @@ package com.example.gfood.domain;
 
 import javax.persistence.AttributeOverride;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import com.example.gfood.common.Money;
 
@@ -11,11 +17,22 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-@Embeddable
+@Entity
+@Table(name = "order_items")
 public class OrderItem {
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
   private String menuItemId;
+
   private Integer quantity;
+
   private String name;
+
+  @ManyToOne
+  @JoinColumn(name = "order_id")
+  private Order order;
 
   @Embedded
   @AttributeOverride(name = "amount", column = @Column(name = "price"))
@@ -30,6 +47,14 @@ public class OrderItem {
     this.name = name;
     this.price = price;
     this.quantity = quantity;
+  }
+
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
   }
 
   public String getMenuItemId() {
@@ -54,6 +79,14 @@ public class OrderItem {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public Order getOrder() {
+    return order;
+  }
+
+  public void setOrder(Order order) {
+    this.order = order;
   }
 
   public Money getPrice() {
