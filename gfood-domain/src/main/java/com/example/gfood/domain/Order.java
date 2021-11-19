@@ -14,6 +14,9 @@ import javax.persistence.Table;
 
 import com.example.gfood.common.Money;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
@@ -84,5 +87,20 @@ public class Order {
   public void setOrderItems(List<OrderItem> orderItems) {
     this.orderItems = orderItems;
     this.orderItems.stream().forEach(orderItem -> orderItem.setOrder(this));
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o);
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
   }
 }
