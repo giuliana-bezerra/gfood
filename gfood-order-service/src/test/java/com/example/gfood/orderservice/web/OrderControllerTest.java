@@ -17,6 +17,7 @@ import com.example.gfood.common.MoneyModuleConfig;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderItem;
+import com.example.gfood.domain.OrderState;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
@@ -25,6 +26,7 @@ import com.example.gfood.orderservice.api.GetOrderResponse;
 import com.example.gfood.orderservice.api.OrderItemDTO;
 import com.example.gfood.orderservice.domain.OrderService;
 import com.example.gfood.orderservice.main.OrderServiceConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
@@ -65,7 +67,7 @@ public class OrderControllerTest {
     Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
         orderItems);
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName());
+        order.getRestaurant().getName(), OrderState.APPROVED.name());
     String urlTemplate = "/orders/" + order.getId();
 
     when(service.findById(1L)).thenReturn(Optional.of(order));
@@ -138,5 +140,38 @@ public class OrderControllerTest {
             add(new OrderItemDTO(null, 0));
           }
         }))).contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void shouldCancelOrder() throws Exception {
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    List<MenuItem> menuItems = new ArrayList<>() {
+      {
+        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
+      }
+    };
+
+    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
+        orderItems);
+    order.setOrderState(OrderState.CANCELLED);
+
+    when(service.cancel(order.getId())).thenReturn(Optional.of(order));
+
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.CANCELLED.name());
+
+    mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotCancelOrder() throws Exception {
+    when(service.cancel(1L)).thenReturn(Optional.empty());
+
+    mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isNotFound());
   }
 }

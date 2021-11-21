@@ -44,6 +44,14 @@ public class OrderService {
     return order;
   }
 
+  @Transactional
+  public Optional<Order> cancel(Long orderId) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.cancel();
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
   private List<OrderItem> makeOrderItems(List<OrderItemDTO> orderItems, Long restaurantId) {
     // Load menu items from restaurant
     Restaurant restaurant = restaurantRepository.findById(restaurantId)

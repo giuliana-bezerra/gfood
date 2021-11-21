@@ -137,4 +137,20 @@ public class OrderServiceTest {
     assertThrows(ConsumerOrderInvalidException.class,
         () -> service.create(consumer.getId(), restaurant.getId(), orderItems));
   }
+
+  @Test
+  public void shouldCancelOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+    assertEquals(service.cancel(1L), Optional.of(order));
+  }
+
+  @Test
+  public void shouldNotCancelOrder() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+
+    assertEquals(service.cancel(1L), Optional.empty());
+  }
 }

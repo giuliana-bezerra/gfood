@@ -1,6 +1,5 @@
 package com.example.gfood.restaurantservice.api;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 

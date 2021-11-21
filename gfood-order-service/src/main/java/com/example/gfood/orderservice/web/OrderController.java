@@ -29,15 +29,16 @@ public class OrderController {
   @RequestMapping(path = "/{orderId}", method = RequestMethod.GET, produces = { "application/json; charset=UTF-8" })
   public ResponseEntity<GetOrderResponse> get(@PathVariable Long orderId) {
     return orderService.findById(orderId)
-        .map(order -> new ResponseEntity<GetOrderResponse>(
-            new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName()), HttpStatus.OK))
+        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
   }
 
   @RequestMapping(method = RequestMethod.GET)
   public ResponseEntity<List<GetOrderResponse>> list(@RequestParam Long consumerId) {
     List<GetOrderResponse> response = orderService.list(consumerId).stream()
-        .map(order -> new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName()))
+        .map(order -> new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName(),
+            order.getOrderState().name()))
         .collect(Collectors.toList());
 
     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -49,5 +50,14 @@ public class OrderController {
         new CreateOrderResponse(
             orderService.create(request.getConsumerId(), request.getRestaurantId(), request.getOrderItems()).getId()),
         HttpStatus.CREATED);
+  }
+
+  @RequestMapping(path = "/{orderId}/cancel", method = RequestMethod.POST)
+  public ResponseEntity<GetOrderResponse> cancel(@PathVariable Long orderId) {
+    return orderService.cancel(orderId)
+        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
   }
 }

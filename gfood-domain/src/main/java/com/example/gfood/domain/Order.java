@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,6 +37,9 @@ public class Order {
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = CascadeType.ALL)
   private List<OrderItem> orderItems;
 
+  @Enumerated(EnumType.STRING)
+  private OrderState orderState;
+
   public Order() {
 
   }
@@ -43,6 +48,7 @@ public class Order {
     this.consumerId = consumerId;
     this.restaurant = restaurant;
     setOrderItems(orderItems);
+    this.orderState = OrderState.APPROVED;
   }
 
   public Order(Long id, Long consumerId, Restaurant restaurant, List<OrderItem> orderItems) {
@@ -50,6 +56,7 @@ public class Order {
     this.consumerId = consumerId;
     this.restaurant = restaurant;
     setOrderItems(orderItems);
+    this.orderState = OrderState.APPROVED;
   }
 
   public Money getOrderTotal() {
@@ -87,6 +94,18 @@ public class Order {
   public void setOrderItems(List<OrderItem> orderItems) {
     this.orderItems = orderItems;
     this.orderItems.stream().forEach(orderItem -> orderItem.setOrder(this));
+  }
+
+  public OrderState getOrderState() {
+    return orderState;
+  }
+
+  public void setOrderState(OrderState orderState) {
+    this.orderState = orderState;
+  }
+
+  public void cancel() {
+    this.orderState = OrderState.CANCELLED;
   }
 
   @Override
