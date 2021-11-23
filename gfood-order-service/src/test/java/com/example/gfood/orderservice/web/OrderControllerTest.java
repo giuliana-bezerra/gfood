@@ -8,15 +8,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import com.example.gfood.common.Address;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.MoneyModuleConfig;
+import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderItem;
+import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.domain.OrderState;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantMenu;
@@ -24,9 +27,9 @@ import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
 import com.example.gfood.orderservice.api.OrderItemDTO;
+import com.example.gfood.orderservice.api.ReviseOrderRequest;
 import com.example.gfood.orderservice.domain.OrderService;
 import com.example.gfood.orderservice.main.OrderServiceConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
@@ -192,8 +195,68 @@ public class OrderControllerTest {
         orderItems);
     order.setOrderState(OrderState.CANCELLED);
 
-    when(service.cancel(1L)).thenReturn(Optional.of(order));
+    when(service.cancel(1L)).thenThrow(UnsupportedStateTransitionException.class);
 
     mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isUnprocessableEntity());
+  }
+
+  @Test
+  public void shouldReviseOrder() throws Exception {
+    Integer revisedQuantity = 2;
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    List<OrderItem> orderItemsRevised = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), revisedQuantity));
+      }
+    };
+    Order order = new Order(1L, 1L, new Restaurant(1L, "name", new Address()), orderItems);
+    Order revisedOrder = new Order(1L, 1L, new Restaurant(1L, "name", new Address()), orderItemsRevised);
+
+    OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
+      {
+        put("1", revisedQuantity);
+      }
+    });
+    ReviseOrderRequest request = new ReviseOrderRequest(new HashMap<>() {
+      {
+        put("1", revisedQuantity);
+      }
+    });
+    GetOrderResponse response = new GetOrderResponse(revisedOrder.getId(), revisedOrder.getOrderTotal(),
+        revisedOrder.getRestaurant().getName(), OrderState.APPROVED.name());
+
+    when(service.revise(order.getId(), orderRevision)).thenReturn(Optional.of(revisedOrder));
+
+    mockMvc
+        .perform(post("/orders/1/revise").content(objectMapper.writeValueAsString(request))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotReviseOrder() throws Exception {
+    OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
+      {
+        put("1", 1);
+      }
+    });
+    ReviseOrderRequest request = new ReviseOrderRequest(new HashMap<>() {
+      {
+        put("1", 1);
+      }
+    });
+
+    when(service.revise(1L, orderRevision)).thenReturn(Optional.empty());
+
+    mockMvc.perform(post("/orders/1/revise").content(objectMapper.writeValueAsString(request))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
+
+    mockMvc.perform(post("/orders/1/revise").content(objectMapper.writeValueAsString(new ReviseOrderRequest()))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
   }
 }

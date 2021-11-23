@@ -11,6 +11,7 @@ import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderRepository;
+import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.orderservice.api.OrderItemDTO;
@@ -48,6 +49,14 @@ public class OrderService {
   public Optional<Order> cancel(Long orderId) {
     return orderRepository.findById(orderId).map(order -> {
       order.cancel();
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
+  @Transactional
+  public Optional<Order> revise(Long orderId, OrderRevision orderRevision) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.revise(orderRevision);
       return Optional.of(order);
     }).orElseGet(() -> Optional.empty());
   }

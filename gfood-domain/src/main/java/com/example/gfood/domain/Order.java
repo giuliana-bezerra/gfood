@@ -2,7 +2,10 @@ package com.example.gfood.domain;
 
 import java.util.List;
 
+import javax.persistence.AttributeOverride;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -40,6 +43,10 @@ public class Order {
 
   @Enumerated(EnumType.STRING)
   private OrderState orderState;
+
+  @Embedded
+  @AttributeOverride(name = "amount", column = @Column(name = "order_minimum"))
+  private Money orderMinimum = new Money("1.0");
 
   public Order() {
 
@@ -111,6 +118,23 @@ public class Order {
     this.orderState = OrderState.CANCELLED;
   }
 
+  public void revise(OrderRevision orderRevision) {
+    if (this.orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(this.orderState);
+
+    if (!orderRevision.getRevisedItemQuantities().isEmpty())
+      updateOrderItems(orderRevision);
+  }
+
+  private void updateOrderItems(OrderRevision orderRevision) {
+    this.orderItems.stream().forEach(orderItem -> {
+      Integer revised = orderRevision.getRevisedItemQuantities().get(orderItem.getMenuItemId());
+      orderItem.setQuantity(revised);
+      if (!getOrderTotal().isGreaterThanOrEqual(orderMinimum))
+        throw new OrderMinimumNotMetException();
+    });
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
@@ -125,4 +149,5 @@ public class Order {
   public int hashCode() {
     return HashCodeBuilder.reflectionHashCode(this);
   }
+
 }

@@ -5,12 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import com.example.gfood.common.Address;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.PersonName;
+import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.consumerservice.domain.ConsumerNotFoundException;
 import com.example.gfood.consumerservice.domain.ConsumerOrderInvalidException;
 import com.example.gfood.consumerservice.domain.ConsumerService;
@@ -19,7 +21,10 @@ import com.example.gfood.domain.ConsumerRepository;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderItem;
+import com.example.gfood.domain.OrderMinimumNotMetException;
 import com.example.gfood.domain.OrderRepository;
+import com.example.gfood.domain.OrderRevision;
+import com.example.gfood.domain.OrderState;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.domain.RestaurantRepository;
@@ -148,9 +153,65 @@ public class OrderServiceTest {
   }
 
   @Test
-  public void shouldNotCancelOrder() {
+  public void shouldNotCancelInvalidOrder() {
     when(orderRepository.findById(1L)).thenReturn(Optional.empty());
-
     assertEquals(service.cancel(1L), Optional.empty());
+
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.CANCELLED);
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.cancel(1L));
+  }
+
+  @Test
+  public void shouldReviseOrder() {
+    Integer revisedQuantity = 2;
+
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    List<OrderItem> orderItemsRevised = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), revisedQuantity));
+      }
+    };
+    Order order = new Order(1L, 1L, new Restaurant(1L), orderItems);
+    Order revisedOrder = new Order(1L, 1L, new Restaurant(1L), orderItemsRevised);
+    OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
+      {
+        put("1", revisedQuantity);
+      }
+    });
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    assertEquals(service.revise(order.getId(), orderRevision).get(), revisedOrder);
+  }
+
+  @Test
+  public void shouldNotReviseOrder() {
+    Integer revisedQuantity = 0;
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    Order order = new Order(1L, 1L, new Restaurant(1L), orderItems);
+    Order orderCancelled = new Order(2L, 1L, new Restaurant(1L), orderItems);
+    orderCancelled.setOrderState(OrderState.CANCELLED);
+    OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
+      {
+        put("1", revisedQuantity);
+      }
+    });
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+    when(orderRepository.findById(orderCancelled.getId())).thenReturn(Optional.of(orderCancelled));
+    when(orderRepository.findById(3L)).thenReturn(Optional.empty());
+
+    assertThrows(OrderMinimumNotMetException.class, () -> service.revise(order.getId(), orderRevision));
+    assertThrows(UnsupportedStateTransitionException.class,
+        () -> service.revise(orderCancelled.getId(), orderRevision));
+    assertEquals(Optional.empty(), service.revise(3L, orderRevision));
   }
 }

@@ -7,9 +7,11 @@ import javax.validation.Valid;
 
 import com.example.gfood.common.HttpError;
 import com.example.gfood.common.UnsupportedStateTransitionException;
+import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
+import com.example.gfood.orderservice.api.ReviseOrderRequest;
 import com.example.gfood.orderservice.domain.OrderService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,5 +68,14 @@ public class OrderController {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
           "Invalid order state for cancelling - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
+  }
+
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/revise", method = RequestMethod.POST)
+  public ResponseEntity revise(@PathVariable Long orderId, @RequestBody @Valid ReviseOrderRequest reviseOrderRequest) {
+    return orderService.revise(orderId, new OrderRevision(reviseOrderRequest.getRevisedLineItemQuantities()))
+        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
   }
 }
