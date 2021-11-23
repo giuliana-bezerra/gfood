@@ -101,4 +101,4 @@ Adding more functionality to gfood requires following the steps below to maintai
 - Create new migrations inside `gfood-flyway`
 - Add unit tests inside the new service project
 - Add integration tests inside gfood-end-to-end-tests
-- Change scripts to build and test/run the new project
+- Change scripts to build and test/run the new projects

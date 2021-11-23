@@ -15,6 +15,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.example.gfood.common.Money;
+import com.example.gfood.common.UnsupportedStateTransitionException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -105,6 +106,8 @@ public class Order {
   }
 
   public void cancel() {
+    if (this.orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(this.orderState);
     this.orderState = OrderState.CANCELLED;
   }
 

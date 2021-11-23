@@ -5,6 +5,8 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import com.example.gfood.common.HttpError;
+import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
@@ -52,12 +54,17 @@ public class OrderController {
         HttpStatus.CREATED);
   }
 
+  @SuppressWarnings("rawtypes")
   @RequestMapping(path = "/{orderId}/cancel", method = RequestMethod.POST)
-  public ResponseEntity<GetOrderResponse> cancel(@PathVariable Long orderId) {
-    return orderService.cancel(orderId)
-        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
-        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-
+  public ResponseEntity cancel(@PathVariable Long orderId) {
+    try {
+      return orderService.cancel(orderId)
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for cancelling - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
   }
 }

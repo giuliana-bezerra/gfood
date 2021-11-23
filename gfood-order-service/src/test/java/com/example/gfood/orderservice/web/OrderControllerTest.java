@@ -174,4 +174,26 @@ public class OrderControllerTest {
 
     mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isNotFound());
   }
+
+  @Test
+  public void shouldNotCancelInvalidStateOrder() throws Exception {
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    List<MenuItem> menuItems = new ArrayList<>() {
+      {
+        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
+      }
+    };
+
+    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
+        orderItems);
+    order.setOrderState(OrderState.CANCELLED);
+
+    when(service.cancel(1L)).thenReturn(Optional.of(order));
+
+    mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isUnprocessableEntity());
+  }
 }
