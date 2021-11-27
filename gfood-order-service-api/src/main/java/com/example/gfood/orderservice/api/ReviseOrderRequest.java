@@ -15,11 +15,11 @@ public class ReviseOrderRequest {
     this.revisedItemQuantities = revisedItemQuantities;
   }
 
-  public Map<String, Integer> getRevisedLineItemQuantities() {
+  public Map<String, Integer> getRevisedItemQuantities() {
     return revisedItemQuantities;
   }
 
-  public void setRevisedLineItemQuantities(Map<String, Integer> revisedItemQuantities) {
+  public void setRevisedItemQuantities(Map<String, Integer> revisedItemQuantities) {
     this.revisedItemQuantities = revisedItemQuantities;
   }
 }

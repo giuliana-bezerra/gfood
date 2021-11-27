@@ -7,22 +7,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import com.example.gfood.common.Address;
+import com.example.gfood.common.DateType;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.MoneyModuleConfig;
 import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
+import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.domain.OrderState;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantMenu;
+import com.example.gfood.orderservice.api.AcceptOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
@@ -30,8 +34,10 @@ import com.example.gfood.orderservice.api.OrderItemDTO;
 import com.example.gfood.orderservice.api.ReviseOrderRequest;
 import com.example.gfood.orderservice.domain.OrderService;
 import com.example.gfood.orderservice.main.OrderServiceConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -45,6 +51,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(OrderController.class)
 @Import(value = { OrderController.class, MoneyModuleConfig.class })
 public class OrderControllerTest {
+  private final static LocalDateTime LOCAL_DATE_TIME = LocalDateTime.now();
+
   @Autowired
   private MockMvc mockMvc;
 
@@ -53,6 +61,14 @@ public class OrderControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
+
+  @MockBean
+  private DateType dateType;
+
+  @BeforeEach
+  public void init() {
+    when(dateType.now()).thenReturn(LOCAL_DATE_TIME);
+  }
 
   @Test
   public void shouldFindOrderById() throws Exception {
@@ -258,5 +274,55 @@ public class OrderControllerTest {
 
     mockMvc.perform(post("/orders/1/revise").content(objectMapper.writeValueAsString(new ReviseOrderRequest()))
         .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+  }
+
+  @Test
+  public void shouldAcceptOrder() throws Exception {
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    List<MenuItem> menuItems = new ArrayList<>() {
+      {
+        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
+      }
+    };
+
+    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
+        orderItems);
+    order.setOrderState(OrderState.ACCEPTED);
+    LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
+    AcceptOrderRequest request = new AcceptOrderRequest(readyBy);
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.ACCEPTED.name());
+    when(service.accept(order.getId(), new OrderAcceptance(readyBy))).thenReturn(Optional.of(order));
+
+    mockMvc
+        .perform(post("/orders/1/accept").content(objectMapper.writeValueAsString(request))
+            .contentType(MediaType.APPLICATION_JSON))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotAcceptOrder() throws Exception {
+    LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
+    AcceptOrderRequest request = new AcceptOrderRequest(readyBy);
+
+    when(service.accept(1L, new OrderAcceptance())).thenReturn(Optional.empty());
+    when(service.accept(2L, new OrderAcceptance(readyBy))).thenThrow(UnsupportedStateTransitionException.class);
+    when(service.accept(3L, new OrderAcceptance(readyBy))).thenThrow(IllegalArgumentException.class);
+
+    mockMvc.perform(post("/orders/1/accept").content(objectMapper.writeValueAsString(request))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
+
+    mockMvc.perform(post("/orders/1/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest()))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isBadRequest());
+
+    mockMvc.perform(post("/orders/2/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
+    mockMvc.perform(post("/orders/3/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
   }
 }

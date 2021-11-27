@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
 import com.example.gfood.common.Address;
+import com.example.gfood.common.DateType;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.PersonName;
 import com.example.gfood.common.UnsupportedStateTransitionException;
@@ -20,6 +22,7 @@ import com.example.gfood.domain.Consumer;
 import com.example.gfood.domain.ConsumerRepository;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
+import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderMinimumNotMetException;
 import com.example.gfood.domain.OrderRepository;
@@ -30,6 +33,7 @@ import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.orderservice.api.OrderItemDTO;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,6 +43,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 @SpringBootTest(classes = { OrderService.class, ConsumerService.class })
 @AutoConfigureMockMvc
 public class OrderServiceTest {
+  private final static LocalDateTime LOCAL_DATE_TIME = LocalDateTime.now();
+
   @Autowired
   private OrderService service;
 
@@ -50,6 +56,14 @@ public class OrderServiceTest {
 
   @MockBean
   private ConsumerRepository consumerRepository;
+
+  @MockBean
+  private DateType dateType;
+
+  @BeforeEach
+  public void init() {
+    when(dateType.now()).thenReturn(LOCAL_DATE_TIME);
+  }
 
   @Test
   public void shouldCreateOrder() {
@@ -213,5 +227,41 @@ public class OrderServiceTest {
     assertThrows(UnsupportedStateTransitionException.class,
         () -> service.revise(orderCancelled.getId(), orderRevision));
     assertEquals(Optional.empty(), service.revise(3L, orderRevision));
+  }
+
+  @Test
+  public void shouldAcceptOrder() {
+    List<OrderItem> orderItems = new ArrayList<>() {
+      {
+        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
+      }
+    };
+    Order order = new Order(1L, 1L, new Restaurant(1L), orderItems);
+    LocalDateTime acceptTime = LOCAL_DATE_TIME;
+    LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    assertEquals(order, service.accept(order.getId(), new OrderAcceptance(readyBy)).get());
+    assertEquals(order.getOrderState(), OrderState.ACCEPTED);
+    assertEquals(order.getAcceptTime(), acceptTime);
+    assertEquals(order.getReadyBy(), readyBy);
+  }
+
+  @Test
+  public void shouldNotAcceptOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    Order validOrder = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.CANCELLED);
+    OrderAcceptance orderAcceptance = new OrderAcceptance(LOCAL_DATE_TIME);
+    OrderAcceptance futureOrderAcceptance = new OrderAcceptance(LOCAL_DATE_TIME.minusHours(1L));
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.findById(2L)).thenReturn(Optional.of(validOrder));
+    when(orderRepository.findById(3L)).thenReturn(Optional.empty());
+
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.accept(1L, orderAcceptance));
+    assertThrows(IllegalArgumentException.class, () -> service.accept(2L, futureOrderAcceptance));
+    assertEquals(Optional.empty(), service.accept(3L, orderAcceptance));
   }
 }

@@ -3,12 +3,15 @@ package com.example.gfood.orderservice.domain;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.transaction.Transactional;
 
+import com.example.gfood.common.DateType;
 import com.example.gfood.consumerservice.domain.ConsumerService;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
+import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderRepository;
 import com.example.gfood.domain.OrderRevision;
@@ -16,16 +19,20 @@ import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantRepository;
 import com.example.gfood.orderservice.api.OrderItemDTO;
 
+import org.springframework.data.domain.Example;
+
 public class OrderService {
   private OrderRepository orderRepository;
   private RestaurantRepository restaurantRepository;
   private ConsumerService consumerService;
+  private DateType dateType;
 
   public OrderService(OrderRepository orderRepository, RestaurantRepository restaurantRepository,
-      ConsumerService consumerService) {
+      ConsumerService consumerService, DateType dateType) {
     this.orderRepository = orderRepository;
     this.restaurantRepository = restaurantRepository;
     this.consumerService = consumerService;
+    this.dateType = dateType;
   }
 
   public Optional<Order> findById(Long orderId) {
@@ -33,7 +40,11 @@ public class OrderService {
   }
 
   public List<Order> list(Long consumerId) {
-    return orderRepository.findByConsumerId(consumerId);
+    Order order = new Order();
+    order.setConsumerId(consumerId);
+    Iterable<Order> ordersIt = orderRepository.findAll(Example.of(order));
+    return StreamSupport.stream(ordersIt.spliterator(), false).collect(Collectors.toList());
+    // return orderRepository.findByConsumerId(consumerId);
   }
 
   @Transactional
@@ -57,6 +68,14 @@ public class OrderService {
   public Optional<Order> revise(Long orderId, OrderRevision orderRevision) {
     return orderRepository.findById(orderId).map(order -> {
       order.revise(orderRevision);
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
+  public Optional<Order> accept(Long orderId, OrderAcceptance orderAcceptance) {
+    orderAcceptance.setAcceptTime(dateType.now());
+    return orderRepository.findById(orderId).map(order -> {
+      order.accept(orderAcceptance);
       return Optional.of(order);
     }).orElseGet(() -> Optional.empty());
   }

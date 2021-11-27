@@ -1,5 +1,6 @@
 package com.example.gfood.domain;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.AttributeOverride;
@@ -43,6 +44,9 @@ public class Order {
 
   @Enumerated(EnumType.STRING)
   private OrderState orderState;
+
+  private LocalDateTime readyBy;
+  private LocalDateTime acceptTime;
 
   @Embedded
   @AttributeOverride(name = "amount", column = @Column(name = "order_minimum"))
@@ -110,6 +114,33 @@ public class Order {
 
   public void setOrderState(OrderState orderState) {
     this.orderState = orderState;
+  }
+
+  public LocalDateTime getReadyBy() {
+    return readyBy;
+  }
+
+  public void setReadyBy(LocalDateTime readyBy) {
+    this.readyBy = readyBy;
+  }
+
+  public LocalDateTime getAcceptTime() {
+    return acceptTime;
+  }
+
+  public void setAcceptTime(LocalDateTime acceptTime) {
+    this.acceptTime = acceptTime;
+  }
+
+  public void accept(OrderAcceptance orderAcceptance) {
+    if (orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(orderState);
+
+    this.acceptTime = orderAcceptance.getAcceptTime();
+    if (!acceptTime.isBefore(orderAcceptance.getReadyBy()))
+      throw new IllegalArgumentException("readyBy is not in the future");
+    this.readyBy = orderAcceptance.getReadyBy();
+    this.orderState = OrderState.ACCEPTED;
   }
 
   public void cancel() {

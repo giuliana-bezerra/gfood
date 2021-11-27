@@ -7,7 +7,9 @@ import javax.validation.Valid;
 
 import com.example.gfood.common.HttpError;
 import com.example.gfood.common.UnsupportedStateTransitionException;
+import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderRevision;
+import com.example.gfood.orderservice.api.AcceptOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
@@ -73,9 +75,32 @@ public class OrderController {
   @SuppressWarnings("rawtypes")
   @RequestMapping(path = "/{orderId}/revise", method = RequestMethod.POST)
   public ResponseEntity revise(@PathVariable Long orderId, @RequestBody @Valid ReviseOrderRequest reviseOrderRequest) {
-    return orderService.revise(orderId, new OrderRevision(reviseOrderRequest.getRevisedLineItemQuantities()))
-        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
-        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    try {
+      return orderService.revise(orderId, new OrderRevision(reviseOrderRequest.getRevisedItemQuantities()))
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for revising - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
   }
+
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/accept", method = RequestMethod.POST)
+  public ResponseEntity accept(@PathVariable Long orderId, @RequestBody @Valid AcceptOrderRequest acceptOrderRequest) {
+    try {
+      return orderService.accept(orderId, new OrderAcceptance(acceptOrderRequest.getReadyBy()))
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+  }
+
 }
