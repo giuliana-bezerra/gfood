@@ -52,6 +52,9 @@ public class Order {
   @AttributeOverride(name = "amount", column = @Column(name = "order_minimum"))
   private Money orderMinimum = new Money("1.0");
 
+  @ManyToOne
+  private Courier assignedCourier;
+
   public Order() {
 
   }
@@ -132,6 +135,14 @@ public class Order {
     this.acceptTime = acceptTime;
   }
 
+  public Courier getAssignedCourier() {
+    return assignedCourier;
+  }
+
+  public void setAssignedCourier(Courier assignedCourier) {
+    this.assignedCourier = assignedCourier;
+  }
+
   public void accept(OrderAcceptance orderAcceptance) {
     if (orderState != OrderState.APPROVED)
       throw new UnsupportedStateTransitionException(orderState);
@@ -164,6 +175,10 @@ public class Order {
       if (!getOrderTotal().isGreaterThanOrEqual(orderMinimum))
         throw new OrderMinimumNotMetException();
     });
+  }
+
+  public void schedule(Courier courier) {
+    this.assignedCourier = courier;
   }
 
   @Override

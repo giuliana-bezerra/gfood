@@ -1,5 +1,6 @@
 package com.example.gfood.courierservice.domain;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.example.gfood.common.Address;
@@ -20,10 +21,23 @@ public class CourierService {
     return repository.findById(courierId);
   }
 
+  public Courier findCourierAvailable() {
+    try {
+      List<Courier> couriers = repository.findByAvailableTrue();
+      return couriers.get(0);
+    } catch (IndexOutOfBoundsException e) {
+      throw new NoCouriersAvailableException();
+    }
+  }
+
   @Transactional
   public Courier create(PersonName name, Address address) {
     Courier courier = new Courier(name, address);
     repository.save(courier);
     return courier;
+  }
+
+  public void updateAvailability(Courier courier, boolean available) {
+    courier.setAvailable(available);
   }
 }

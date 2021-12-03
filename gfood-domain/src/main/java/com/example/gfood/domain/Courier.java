@@ -1,5 +1,9 @@
 package com.example.gfood.domain;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -30,6 +34,10 @@ public class Courier {
   private Address address;
 
   private Boolean available = false;
+
+  // LinkedList has better performance for add and remove.
+  @ElementCollection
+  private List<Action> actions = new LinkedList<>();
 
   public Courier() {
   }
@@ -75,6 +83,10 @@ public class Courier {
 
   public void setAvailable(Boolean available) {
     this.available = available;
+  }
+
+  public void addAction(Action action) {
+    actions.add(action);
   }
 
   @Override

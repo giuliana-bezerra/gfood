@@ -7,6 +7,7 @@ import javax.validation.Valid;
 
 import com.example.gfood.common.HttpError;
 import com.example.gfood.common.UnsupportedStateTransitionException;
+import com.example.gfood.courierservice.domain.NoCouriersAvailableException;
 import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.orderservice.api.AcceptOrderRequest;
@@ -99,7 +100,10 @@ public class OrderController {
           "Invalid order state for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
     } catch (IllegalArgumentException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
-          "Invalid order state for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+          "Invalid request for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    } catch (NoCouriersAvailableException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid request for accepting - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
   }
 

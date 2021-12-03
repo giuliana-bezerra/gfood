@@ -1,6 +1,11 @@
 package com.example.gfood.domain;
 
-import org.springframework.data.repository.CrudRepository;
+import java.util.List;
 
-public interface CourierRepository extends CrudRepository<Courier, Long> {
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
+
+public interface CourierRepository extends CrudRepository<Courier, Long>, QueryByExampleExecutor<Courier> {
+  List<Courier> findByAvailableTrue();
+
 }

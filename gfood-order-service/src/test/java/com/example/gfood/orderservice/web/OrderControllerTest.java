@@ -18,6 +18,7 @@ import com.example.gfood.common.DateType;
 import com.example.gfood.common.Money;
 import com.example.gfood.common.MoneyModuleConfig;
 import com.example.gfood.common.UnsupportedStateTransitionException;
+import com.example.gfood.courierservice.domain.NoCouriersAvailableException;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderAcceptance;
@@ -34,7 +35,6 @@ import com.example.gfood.orderservice.api.OrderItemDTO;
 import com.example.gfood.orderservice.api.ReviseOrderRequest;
 import com.example.gfood.orderservice.domain.OrderService;
 import com.example.gfood.orderservice.main.OrderServiceConfig;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -312,7 +312,8 @@ public class OrderControllerTest {
 
     when(service.accept(1L, new OrderAcceptance())).thenReturn(Optional.empty());
     when(service.accept(2L, new OrderAcceptance(readyBy))).thenThrow(UnsupportedStateTransitionException.class);
-    when(service.accept(3L, new OrderAcceptance(readyBy))).thenThrow(IllegalArgumentException.class);
+    when(service.accept(3L, new OrderAcceptance(readyBy))).thenThrow(NoCouriersAvailableException.class);
+    when(service.accept(4L, new OrderAcceptance(readyBy))).thenThrow(IllegalArgumentException.class);
 
     mockMvc.perform(post("/orders/1/accept").content(objectMapper.writeValueAsString(request))
         .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isNotFound());
@@ -322,7 +323,11 @@ public class OrderControllerTest {
 
     mockMvc.perform(post("/orders/2/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
         .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
+
     mockMvc.perform(post("/orders/3/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
+        .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
+
+    mockMvc.perform(post("/orders/4/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
         .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
   }
 }

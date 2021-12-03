@@ -18,8 +18,12 @@ import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.consumerservice.domain.ConsumerNotFoundException;
 import com.example.gfood.consumerservice.domain.ConsumerOrderInvalidException;
 import com.example.gfood.consumerservice.domain.ConsumerService;
+import com.example.gfood.courierservice.domain.CourierService;
+import com.example.gfood.courierservice.domain.NoCouriersAvailableException;
 import com.example.gfood.domain.Consumer;
 import com.example.gfood.domain.ConsumerRepository;
+import com.example.gfood.domain.Courier;
+import com.example.gfood.domain.CourierRepository;
 import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderAcceptance;
@@ -40,7 +44,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-@SpringBootTest(classes = { OrderService.class, ConsumerService.class })
+@SpringBootTest(classes = { OrderService.class, ConsumerService.class, CourierService.class })
 @AutoConfigureMockMvc
 public class OrderServiceTest {
   private final static LocalDateTime LOCAL_DATE_TIME = LocalDateTime.now();
@@ -56,6 +60,9 @@ public class OrderServiceTest {
 
   @MockBean
   private ConsumerRepository consumerRepository;
+
+  @MockBean
+  private CourierRepository courierRepository;
 
   @MockBean
   private DateType dateType;
@@ -239,8 +246,14 @@ public class OrderServiceTest {
     Order order = new Order(1L, 1L, new Restaurant(1L), orderItems);
     LocalDateTime acceptTime = LOCAL_DATE_TIME;
     LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
+    Courier courier = new Courier(1L, new PersonName("firstName", "lastName"), new Address());
 
     when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+    when(courierRepository.findByAvailableTrue()).thenReturn(new ArrayList<Courier>() {
+      {
+        add(courier);
+      }
+    });
 
     assertEquals(order, service.accept(order.getId(), new OrderAcceptance(readyBy)).get());
     assertEquals(order.getOrderState(), OrderState.ACCEPTED);
@@ -253,15 +266,17 @@ public class OrderServiceTest {
     Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
     Order validOrder = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
     order.setOrderState(OrderState.CANCELLED);
-    OrderAcceptance orderAcceptance = new OrderAcceptance(LOCAL_DATE_TIME);
+    OrderAcceptance orderAcceptance = new OrderAcceptance(LOCAL_DATE_TIME.plusHours(1L));
     OrderAcceptance futureOrderAcceptance = new OrderAcceptance(LOCAL_DATE_TIME.minusHours(1L));
 
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
     when(orderRepository.findById(2L)).thenReturn(Optional.of(validOrder));
-    when(orderRepository.findById(3L)).thenReturn(Optional.empty());
+    when(orderRepository.findById(3L)).thenReturn(Optional.of(validOrder));
+    when(orderRepository.findById(4L)).thenReturn(Optional.empty());
 
     assertThrows(UnsupportedStateTransitionException.class, () -> service.accept(1L, orderAcceptance));
     assertThrows(IllegalArgumentException.class, () -> service.accept(2L, futureOrderAcceptance));
-    assertEquals(Optional.empty(), service.accept(3L, orderAcceptance));
+    assertThrows(NoCouriersAvailableException.class, () -> service.accept(3L, orderAcceptance));
+    assertEquals(Optional.empty(), service.accept(4L, orderAcceptance));
   }
 }
