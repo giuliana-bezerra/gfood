@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import com.example.gfood.common.Address;
 import com.example.gfood.common.PersonName;
+import com.example.gfood.courierservice.api.UpdateCourierRequest;
 import com.example.gfood.domain.Courier;
 import com.example.gfood.domain.CourierRepository;
 
@@ -47,5 +48,30 @@ public class CourierServiceTest {
     Courier courier = service.create(name, address);
     assertEquals(courier.getName(), name);
     assertEquals(courier.getAddress(), address);
+  }
+
+  @Test
+  public void shouldUpdateCourierAvailability() {
+    Courier courierAvailable = new Courier(1L, new PersonName("firstName", "lastName"),
+        new Address("street1", "street2", "city", "state", "zip"));
+    Courier courierUnavailable = new Courier(2L, new PersonName("firstName", "lastName"),
+        new Address("street1", "street2", "city", "state", "zip"));
+
+    when(repository.findById(courierAvailable.getId())).thenReturn(Optional.of(courierAvailable));
+    when(repository.findById(courierUnavailable.getId())).thenReturn(Optional.of(courierUnavailable));
+
+    Courier updatedCourierAvailable = service.update(courierAvailable.getId(), new UpdateCourierRequest(true)).get();
+    Courier updatedCourierUnavailable = service.update(courierUnavailable.getId(), new UpdateCourierRequest(false))
+        .get();
+
+    assertEquals(courierAvailable, updatedCourierAvailable);
+    assertEquals(courierUnavailable, updatedCourierUnavailable);
+    assertEquals(true, updatedCourierAvailable.isAvailable());
+    assertEquals(false, updatedCourierUnavailable.isAvailable());
+  }
+
+  @Test
+  public void shouldNotUpdateCourierAvailability() {
+    assertEquals(Optional.empty(), service.update(1L, new UpdateCourierRequest(true)));
   }
 }

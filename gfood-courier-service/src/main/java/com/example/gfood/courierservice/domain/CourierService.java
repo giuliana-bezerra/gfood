@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.example.gfood.common.Address;
 import com.example.gfood.common.PersonName;
+import com.example.gfood.courierservice.api.UpdateCourierRequest;
 import com.example.gfood.domain.Courier;
 import com.example.gfood.domain.CourierRepository;
 
@@ -37,7 +38,17 @@ public class CourierService {
     return courier;
   }
 
+  @Transactional
+  public Optional<Courier> update(Long courierId, UpdateCourierRequest request) {
+    Optional<Courier> courierOpt = repository.findById(courierId);
+    courierOpt.ifPresent(courier -> {
+      courier.setAvailable(request.isAvailable());
+    });
+    return courierOpt;
+  }
+
   public void updateAvailability(Courier courier, boolean available) {
     courier.setAvailable(available);
   }
+
 }

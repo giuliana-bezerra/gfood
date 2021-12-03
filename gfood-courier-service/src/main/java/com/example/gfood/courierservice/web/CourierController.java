@@ -5,6 +5,7 @@ import javax.validation.Valid;
 import com.example.gfood.courierservice.api.CreateCourierRequest;
 import com.example.gfood.courierservice.api.CreateCourierResponse;
 import com.example.gfood.courierservice.api.GetCourierResponse;
+import com.example.gfood.courierservice.api.UpdateCourierRequest;
 import com.example.gfood.courierservice.domain.CourierService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,5 +37,14 @@ public class CourierController {
     return new ResponseEntity<>(
         new CreateCourierResponse(courierService.create(request.getName(), request.getAddress()).getId()),
         HttpStatus.CREATED);
+  }
+
+  @RequestMapping(path = "/{courierId}", method = RequestMethod.PATCH, produces = { "application/json; charset=UTF-8" })
+  public ResponseEntity<GetCourierResponse> patch(@PathVariable Long courierId,
+      @Valid @RequestBody UpdateCourierRequest request) {
+    return courierService.update(courierId, request).map(courier -> new ResponseEntity<>(
+        new GetCourierResponse(courier.getId(), courier.getName(), courier.getAddress(), courier.isAvailable()),
+        HttpStatus.OK))
+        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
   }
 }
