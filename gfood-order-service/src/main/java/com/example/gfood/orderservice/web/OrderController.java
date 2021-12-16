@@ -107,4 +107,60 @@ public class OrderController {
     }
   }
 
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/preparing", method = RequestMethod.POST)
+  public ResponseEntity preparing(@PathVariable Long orderId) {
+    try {
+      return orderService.preparing(orderId)
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for preparing - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/ready", method = RequestMethod.POST)
+  public ResponseEntity ready(@PathVariable Long orderId) {
+    try {
+      return orderService.readyForPickup(orderId)
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for ready - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/pickedup", method = RequestMethod.POST)
+  public ResponseEntity pickedup(@PathVariable Long orderId) {
+    try {
+      return orderService.pickedUp(orderId)
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for pickedup - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  @RequestMapping(path = "/{orderId}/delivered", method = RequestMethod.POST)
+  public ResponseEntity delivered(@PathVariable Long orderId) {
+    try {
+      return orderService.delivered(orderId)
+          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
+              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    } catch (UnsupportedStateTransitionException e) {
+      return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
+          "Invalid order state for delivered - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
+    }
+  }
+
 }

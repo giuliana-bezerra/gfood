@@ -87,6 +87,38 @@ public class OrderService {
     }).orElseGet(() -> Optional.empty());
   }
 
+  @Transactional
+  public Optional<Order> preparing(Long orderId) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.preparing(dateType.now());
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
+  @Transactional
+  public Optional<Order> readyForPickup(Long orderId) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.readyForPickup(dateType.now());
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
+  @Transactional
+  public Optional<Order> pickedUp(Long orderId) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.pickedUp(dateType.now());
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
+  @Transactional
+  public Optional<Order> delivered(Long orderId) {
+    return orderRepository.findById(orderId).map(order -> {
+      order.delivered(dateType.now());
+      return Optional.of(order);
+    }).orElseGet(() -> Optional.empty());
+  }
+
   private void scheduleDelivery(Order order, LocalDateTime readyBy) {
     Courier courier = courierService.findCourierAvailable();
 

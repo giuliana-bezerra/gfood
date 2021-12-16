@@ -19,6 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import com.example.gfood.common.Money;
+import com.example.gfood.common.OrderState;
 import com.example.gfood.common.UnsupportedStateTransitionException;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -47,6 +48,10 @@ public class Order {
 
   private LocalDateTime readyBy;
   private LocalDateTime acceptTime;
+  private LocalDateTime preparingTime;
+  private LocalDateTime readyForPickupTime;
+  private LocalDateTime pickedUpTime;
+  private LocalDateTime deliveredTime;
 
   @Embedded
   @AttributeOverride(name = "amount", column = @Column(name = "order_minimum"))
@@ -72,6 +77,72 @@ public class Order {
     this.restaurant = restaurant;
     setOrderItems(orderItems);
     this.orderState = OrderState.APPROVED;
+  }
+
+  public void accept(OrderAcceptance orderAcceptance) {
+    if (orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(orderState);
+
+    this.acceptTime = orderAcceptance.getAcceptTime();
+    if (!acceptTime.isBefore(orderAcceptance.getReadyBy()))
+      throw new IllegalArgumentException("readyBy is not in the future");
+    this.readyBy = orderAcceptance.getReadyBy();
+    this.orderState = OrderState.ACCEPTED;
+  }
+
+  public void cancel() {
+    if (this.orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(this.orderState);
+    this.orderState = OrderState.CANCELLED;
+  }
+
+  public void revise(OrderRevision orderRevision) {
+    if (this.orderState != OrderState.APPROVED)
+      throw new UnsupportedStateTransitionException(this.orderState);
+
+    if (!orderRevision.getRevisedItemQuantities().isEmpty())
+      updateOrderItems(orderRevision);
+  }
+
+  public void preparing(LocalDateTime preparingTime) {
+    if (this.orderState != OrderState.ACCEPTED)
+      throw new UnsupportedStateTransitionException(this.orderState);
+    this.orderState = OrderState.PREPARING;
+    this.preparingTime = preparingTime;
+  }
+
+  public void readyForPickup(LocalDateTime readyForPickupTime) {
+    if (this.orderState != OrderState.PREPARING)
+      throw new UnsupportedStateTransitionException(this.orderState);
+    this.orderState = OrderState.READY_FOR_PICKUP;
+    this.readyForPickupTime = readyForPickupTime;
+  }
+
+  public void pickedUp(LocalDateTime pickedUpTime) {
+    if (this.orderState != OrderState.READY_FOR_PICKUP)
+      throw new UnsupportedStateTransitionException(this.orderState);
+    this.orderState = OrderState.PICKED_UP;
+    this.pickedUpTime = pickedUpTime;
+  }
+
+  public void delivered(LocalDateTime deliveredTime) {
+    if (this.orderState != OrderState.PICKED_UP)
+      throw new UnsupportedStateTransitionException(this.orderState);
+    this.orderState = OrderState.DELIVERED;
+    this.deliveredTime = deliveredTime;
+  }
+
+  private void updateOrderItems(OrderRevision orderRevision) {
+    this.orderItems.stream().forEach(orderItem -> {
+      Integer revised = orderRevision.getRevisedItemQuantities().get(orderItem.getMenuItemId());
+      orderItem.setQuantity(revised);
+      if (!getOrderTotal().isGreaterThanOrEqual(orderMinimum))
+        throw new OrderMinimumNotMetException();
+    });
+  }
+
+  public void schedule(Courier courier) {
+    this.assignedCourier = courier;
   }
 
   public Money getOrderTotal() {
@@ -143,42 +214,36 @@ public class Order {
     this.assignedCourier = assignedCourier;
   }
 
-  public void accept(OrderAcceptance orderAcceptance) {
-    if (orderState != OrderState.APPROVED)
-      throw new UnsupportedStateTransitionException(orderState);
-
-    this.acceptTime = orderAcceptance.getAcceptTime();
-    if (!acceptTime.isBefore(orderAcceptance.getReadyBy()))
-      throw new IllegalArgumentException("readyBy is not in the future");
-    this.readyBy = orderAcceptance.getReadyBy();
-    this.orderState = OrderState.ACCEPTED;
+  public LocalDateTime getPreparingTime() {
+    return preparingTime;
   }
 
-  public void cancel() {
-    if (this.orderState != OrderState.APPROVED)
-      throw new UnsupportedStateTransitionException(this.orderState);
-    this.orderState = OrderState.CANCELLED;
+  public void setPreparingTime(LocalDateTime preparingTime) {
+    this.preparingTime = preparingTime;
   }
 
-  public void revise(OrderRevision orderRevision) {
-    if (this.orderState != OrderState.APPROVED)
-      throw new UnsupportedStateTransitionException(this.orderState);
-
-    if (!orderRevision.getRevisedItemQuantities().isEmpty())
-      updateOrderItems(orderRevision);
+  public LocalDateTime getReadyForPickupTime() {
+    return readyForPickupTime;
   }
 
-  private void updateOrderItems(OrderRevision orderRevision) {
-    this.orderItems.stream().forEach(orderItem -> {
-      Integer revised = orderRevision.getRevisedItemQuantities().get(orderItem.getMenuItemId());
-      orderItem.setQuantity(revised);
-      if (!getOrderTotal().isGreaterThanOrEqual(orderMinimum))
-        throw new OrderMinimumNotMetException();
-    });
+  public void setReadyForPickupTime(LocalDateTime readyForPickupTime) {
+    this.readyForPickupTime = readyForPickupTime;
   }
 
-  public void schedule(Courier courier) {
-    this.assignedCourier = courier;
+  public LocalDateTime getPickedUpTime() {
+    return pickedUpTime;
+  }
+
+  public void setPickedUpTime(LocalDateTime pickedUpTime) {
+    this.pickedUpTime = pickedUpTime;
+  }
+
+  public LocalDateTime getDeliveredTime() {
+    return deliveredTime;
+  }
+
+  public void setDeliveredTime(LocalDateTime deliveredTime) {
+    this.deliveredTime = deliveredTime;
   }
 
   @Override

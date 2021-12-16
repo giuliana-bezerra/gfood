@@ -42,7 +42,7 @@ public class CourierService {
   public Optional<Courier> update(Long courierId, UpdateCourierRequest request) {
     Optional<Courier> courierOpt = repository.findById(courierId);
     courierOpt.ifPresent(courier -> {
-      courier.setAvailable(request.isAvailable());
+      updateAvailability(courier, request.isAvailable());
     });
     return courierOpt;
   }

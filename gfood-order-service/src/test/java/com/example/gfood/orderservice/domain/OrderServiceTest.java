@@ -13,6 +13,7 @@ import java.util.Optional;
 import com.example.gfood.common.Address;
 import com.example.gfood.common.DateType;
 import com.example.gfood.common.Money;
+import com.example.gfood.common.OrderState;
 import com.example.gfood.common.PersonName;
 import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.consumerservice.domain.ConsumerNotFoundException;
@@ -31,7 +32,6 @@ import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderMinimumNotMetException;
 import com.example.gfood.domain.OrderRepository;
 import com.example.gfood.domain.OrderRevision;
-import com.example.gfood.domain.OrderState;
 import com.example.gfood.domain.Restaurant;
 import com.example.gfood.domain.RestaurantMenu;
 import com.example.gfood.domain.RestaurantRepository;
@@ -278,5 +278,93 @@ public class OrderServiceTest {
     assertThrows(IllegalArgumentException.class, () -> service.accept(2L, futureOrderAcceptance));
     assertThrows(NoCouriersAvailableException.class, () -> service.accept(3L, orderAcceptance));
     assertEquals(Optional.empty(), service.accept(4L, orderAcceptance));
+  }
+
+  @Test
+  public void shouldStartPreparingOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.ACCEPTED);
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    Order preparingOrder = service.preparing(order.getId()).get();
+    assertEquals(order, preparingOrder);
+    assertEquals(LOCAL_DATE_TIME, preparingOrder.getPreparingTime());
+  }
+
+  @Test
+  public void shouldNotStartPreparingOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    assertEquals(Optional.empty(), service.preparing(2L));
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.preparing(order.getId()));
+  }
+
+  @Test
+  public void shouldStartReadyForPickupOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.PREPARING);
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    Order readyForPickupOrder = service.readyForPickup(order.getId()).get();
+    assertEquals(order, readyForPickupOrder);
+    assertEquals(LOCAL_DATE_TIME, readyForPickupOrder.getReadyForPickupTime());
+  }
+
+  @Test
+  public void shouldNotStartReadyForPickupOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    assertEquals(Optional.empty(), service.readyForPickup(2L));
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.readyForPickup(order.getId()));
+  }
+
+  @Test
+  public void shouldStartPickedUpOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.READY_FOR_PICKUP);
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    Order pickedUpOrder = service.pickedUp(order.getId()).get();
+    assertEquals(order, pickedUpOrder);
+    assertEquals(LOCAL_DATE_TIME, pickedUpOrder.getPickedUpTime());
+  }
+
+  @Test
+  public void shouldNotStartPickedUpOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    assertEquals(Optional.empty(), service.pickedUp(2L));
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.pickedUp(order.getId()));
+  }
+
+  @Test
+  public void shouldStartDeliveredOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+    order.setOrderState(OrderState.PICKED_UP);
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    Order deliveredOrder = service.delivered(order.getId()).get();
+    assertEquals(order, deliveredOrder);
+    assertEquals(LOCAL_DATE_TIME, deliveredOrder.getDeliveredTime());
+  }
+
+  @Test
+  public void shouldNotStartDeliveredOrder() {
+    Order order = new Order(1L, 1L, new Restaurant(1L), new ArrayList<>());
+
+    when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+    assertEquals(Optional.empty(), service.pickedUp(2L));
+    assertThrows(UnsupportedStateTransitionException.class, () -> service.delivered(order.getId()));
   }
 }

@@ -13,20 +13,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-import com.example.gfood.common.Address;
 import com.example.gfood.common.DateType;
-import com.example.gfood.common.Money;
 import com.example.gfood.common.MoneyModuleConfig;
+import com.example.gfood.common.OrderState;
 import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.courierservice.domain.NoCouriersAvailableException;
-import com.example.gfood.domain.MenuItem;
 import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderItem;
 import com.example.gfood.domain.OrderRevision;
-import com.example.gfood.domain.OrderState;
-import com.example.gfood.domain.Restaurant;
-import com.example.gfood.domain.RestaurantMenu;
+import com.example.gfood.orderservice.OrderConstants;
 import com.example.gfood.orderservice.api.AcceptOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
@@ -72,19 +68,8 @@ public class OrderControllerTest {
 
   @Test
   public void shouldFindOrderById() throws Exception {
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
-    List<MenuItem> menuItems = new ArrayList<>() {
-      {
-        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
-      }
-    };
+    Order order = OrderConstants.ORDER;
 
-    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
-        orderItems);
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
         order.getRestaurant().getName(), OrderState.APPROVED.name());
     String urlTemplate = "/orders/" + order.getId();
@@ -102,24 +87,13 @@ public class OrderControllerTest {
 
   @Test
   public void shouldCreateOrder() throws Exception {
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
+    Order order = OrderConstants.ORDER;
+
     List<OrderItemDTO> orderItemsDTO = new ArrayList<>() {
       {
-        add(new OrderItemDTO("1", 1));
+        add(new OrderItemDTO(order.getOrderItems().get(0).getMenuItemId(), 1));
       }
     };
-    List<MenuItem> menuItems = new ArrayList<>() {
-      {
-        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
-      }
-    };
-
-    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
-        orderItems);
 
     CreateOrderRequest request = new CreateOrderRequest(order.getRestaurant().getId(), order.getConsumerId(),
         orderItemsDTO);
@@ -163,19 +137,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldCancelOrder() throws Exception {
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
-    List<MenuItem> menuItems = new ArrayList<>() {
-      {
-        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
-      }
-    };
-
-    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
-        orderItems);
+    Order order = OrderConstants.ORDER;
     order.setOrderState(OrderState.CANCELLED);
 
     when(service.cancel(order.getId())).thenReturn(Optional.of(order));
@@ -196,19 +158,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldNotCancelInvalidStateOrder() throws Exception {
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
-    List<MenuItem> menuItems = new ArrayList<>() {
-      {
-        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
-      }
-    };
-
-    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
-        orderItems);
+    Order order = OrderConstants.ORDER;
     order.setOrderState(OrderState.CANCELLED);
 
     when(service.cancel(1L)).thenThrow(UnsupportedStateTransitionException.class);
@@ -219,27 +169,23 @@ public class OrderControllerTest {
   @Test
   public void shouldReviseOrder() throws Exception {
     Integer revisedQuantity = 2;
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
+    Order order = OrderConstants.ORDER;
+    OrderItem orderItem = order.getOrderItems().get(0);
     List<OrderItem> orderItemsRevised = new ArrayList<>() {
       {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), revisedQuantity));
+        add(new OrderItem(orderItem.getMenuItemId(), orderItem.getName(), orderItem.getPrice(), revisedQuantity));
       }
     };
-    Order order = new Order(1L, 1L, new Restaurant(1L, "name", new Address()), orderItems);
-    Order revisedOrder = new Order(1L, 1L, new Restaurant(1L, "name", new Address()), orderItemsRevised);
+    Order revisedOrder = new Order(order.getId(), order.getConsumerId(), order.getRestaurant(), orderItemsRevised);
 
     OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
       {
-        put("1", revisedQuantity);
+        put(orderItem.getMenuItemId(), revisedQuantity);
       }
     });
     ReviseOrderRequest request = new ReviseOrderRequest(new HashMap<>() {
       {
-        put("1", revisedQuantity);
+        put(orderItem.getMenuItemId(), revisedQuantity);
       }
     });
     GetOrderResponse response = new GetOrderResponse(revisedOrder.getId(), revisedOrder.getOrderTotal(),
@@ -278,19 +224,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldAcceptOrder() throws Exception {
-    List<OrderItem> orderItems = new ArrayList<>() {
-      {
-        add(new OrderItem("1", "Cheeseburger", new Money("50.20"), 1));
-      }
-    };
-    List<MenuItem> menuItems = new ArrayList<>() {
-      {
-        add(new MenuItem("1", "Cheeseburger", new Money("50.20")));
-      }
-    };
-
-    Order order = new Order(1L, 1L, new Restaurant(1L, "Grestaurant", new Address(), new RestaurantMenu(menuItems)),
-        orderItems);
+    Order order = OrderConstants.ORDER;
     order.setOrderState(OrderState.ACCEPTED);
     LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
     AcceptOrderRequest request = new AcceptOrderRequest(readyBy);
@@ -329,5 +263,117 @@ public class OrderControllerTest {
 
     mockMvc.perform(post("/orders/4/accept").content(objectMapper.writeValueAsString(new AcceptOrderRequest(readyBy)))
         .contentType(MediaType.APPLICATION_JSON)).andDo(print()).andExpect(status().isUnprocessableEntity());
+  }
+
+  @Test
+  public void shouldStartPreparingOrder() throws Exception {
+    Order order = OrderConstants.ORDER;
+    order.setOrderState(OrderState.PREPARING);
+
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.PREPARING.name());
+
+    when(service.preparing(order.getId())).thenReturn(Optional.of(order));
+
+    mockMvc
+        .perform(post("/orders/1/preparing"))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotStartPreparingOrder() throws Exception {
+    when(service.preparing(1L)).thenThrow(UnsupportedStateTransitionException.class);
+
+    mockMvc
+        .perform(post("/orders/1/preparing"))
+        .andDo(print()).andExpect(status().isUnprocessableEntity());
+    mockMvc
+        .perform(post("/orders/2/preparing"))
+        .andDo(print()).andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void shouldStartReadyForPickupOrder() throws Exception {
+    Order order = OrderConstants.ORDER;
+    order.setOrderState(OrderState.READY_FOR_PICKUP);
+
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.READY_FOR_PICKUP.name());
+
+    when(service.readyForPickup(order.getId())).thenReturn(Optional.of(order));
+
+    mockMvc
+        .perform(post("/orders/1/ready"))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotStartReadyForPickupOrder() throws Exception {
+    when(service.readyForPickup(1L)).thenThrow(UnsupportedStateTransitionException.class);
+
+    mockMvc
+        .perform(post("/orders/1/ready"))
+        .andDo(print()).andExpect(status().isUnprocessableEntity());
+    mockMvc
+        .perform(post("/orders/2/ready"))
+        .andDo(print()).andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void shouldStartPickedUpOrder() throws Exception {
+    Order order = OrderConstants.ORDER;
+    order.setOrderState(OrderState.PICKED_UP);
+
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.PICKED_UP.name());
+
+    when(service.pickedUp(order.getId())).thenReturn(Optional.of(order));
+
+    mockMvc
+        .perform(post("/orders/1/pickedup"))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotStartPickedUpOrder() throws Exception {
+    when(service.pickedUp(1L)).thenThrow(UnsupportedStateTransitionException.class);
+
+    mockMvc
+        .perform(post("/orders/1/pickedup"))
+        .andDo(print()).andExpect(status().isUnprocessableEntity());
+    mockMvc
+        .perform(post("/orders/2/pickedup"))
+        .andDo(print()).andExpect(status().isNotFound());
+  }
+
+  @Test
+  public void shouldStartDeliveredOrder() throws Exception {
+    Order order = OrderConstants.ORDER;
+    order.setOrderState(OrderState.DELIVERED);
+
+    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+        order.getRestaurant().getName(), OrderState.DELIVERED.name());
+
+    when(service.delivered(order.getId())).thenReturn(Optional.of(order));
+
+    mockMvc
+        .perform(post("/orders/1/delivered"))
+        .andDo(print()).andExpect(status().isOk())
+        .andExpect(content().string(objectMapper.writeValueAsString(response)));
+  }
+
+  @Test
+  public void shouldNotStartDeliveredOrder() throws Exception {
+    when(service.delivered(1L)).thenThrow(UnsupportedStateTransitionException.class);
+
+    mockMvc
+        .perform(post("/orders/1/delivered"))
+        .andDo(print()).andExpect(status().isUnprocessableEntity());
+    mockMvc
+        .perform(post("/orders/2/delivered"))
+        .andDo(print()).andExpect(status().isNotFound());
   }
 }

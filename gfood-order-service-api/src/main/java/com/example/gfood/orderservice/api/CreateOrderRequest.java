@@ -8,13 +8,13 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 public class CreateOrderRequest {
-  @NotNull(message = "Restaurant is required.")
-  @Positive(message = "Restaurant is required.")
+  @NotNull(message = "restaurantId is required.")
+  @Positive(message = "restaurantId is required.")
   private Long restaurantId;
-  @NotNull(message = "Consumer is required.")
-  @Positive(message = "Consumer is required.")
+  @NotNull(message = "consumerId is required.")
+  @Positive(message = "consumerId is required.")
   private Long consumerId;
-  @NotEmpty(message = "Order items are required.")
+  @NotEmpty(message = "orderItems are required.")
   private List<@Valid OrderItemDTO> orderItems;
 
   public CreateOrderRequest() {
