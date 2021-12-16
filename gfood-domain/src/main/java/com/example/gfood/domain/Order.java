@@ -75,8 +75,16 @@ public class Order {
     this.id = id;
     this.consumerId = consumerId;
     this.restaurant = restaurant;
-    setOrderItems(orderItems);
     this.orderState = OrderState.APPROVED;
+    setOrderItems(orderItems);
+  }
+
+  public Order(Order order) {
+    this.id = order.getId();
+    this.consumerId = order.getConsumerId();
+    this.restaurant = order.getRestaurant();
+    this.orderState = OrderState.APPROVED;
+    setOrderItems(order.getOrderItems());
   }
 
   public void accept(OrderAcceptance orderAcceptance) {

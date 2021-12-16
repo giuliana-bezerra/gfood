@@ -68,13 +68,13 @@ public class OrderControllerTest {
 
   @Test
   public void shouldFindOrderById() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
 
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
         order.getRestaurant().getName(), OrderState.APPROVED.name());
     String urlTemplate = "/orders/" + order.getId();
 
-    when(service.findById(1L)).thenReturn(Optional.of(order));
+    when(service.findById(order.getId())).thenReturn(Optional.of(order));
 
     this.mockMvc.perform(get(urlTemplate)).andDo(print()).andExpect(status().isOk())
         .andExpect(content().string(objectMapper.writeValueAsString(response)));
@@ -87,7 +87,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldCreateOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
 
     List<OrderItemDTO> orderItemsDTO = new ArrayList<>() {
       {
@@ -137,7 +137,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldCancelOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.CANCELLED);
 
     when(service.cancel(order.getId())).thenReturn(Optional.of(order));
@@ -158,7 +158,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldNotCancelInvalidStateOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.CANCELLED);
 
     when(service.cancel(1L)).thenThrow(UnsupportedStateTransitionException.class);
@@ -169,7 +169,7 @@ public class OrderControllerTest {
   @Test
   public void shouldReviseOrder() throws Exception {
     Integer revisedQuantity = 2;
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     OrderItem orderItem = order.getOrderItems().get(0);
     List<OrderItem> orderItemsRevised = new ArrayList<>() {
       {
@@ -224,7 +224,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldAcceptOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.ACCEPTED);
     LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
     AcceptOrderRequest request = new AcceptOrderRequest(readyBy);
@@ -267,7 +267,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldStartPreparingOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.PREPARING);
 
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
@@ -295,10 +295,11 @@ public class OrderControllerTest {
 
   @Test
   public void shouldStartReadyForPickupOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.READY_FOR_PICKUP);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
+    GetOrderResponse response = new GetOrderResponse(order.getId(),
+        order.getOrderTotal(),
         order.getRestaurant().getName(), OrderState.READY_FOR_PICKUP.name());
 
     when(service.readyForPickup(order.getId())).thenReturn(Optional.of(order));
@@ -323,7 +324,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldStartPickedUpOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.PICKED_UP);
 
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
@@ -351,7 +352,7 @@ public class OrderControllerTest {
 
   @Test
   public void shouldStartDeliveredOrder() throws Exception {
-    Order order = OrderConstants.ORDER;
+    Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.DELIVERED);
 
     GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
