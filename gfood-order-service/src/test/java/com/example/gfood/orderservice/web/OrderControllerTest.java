@@ -52,6 +52,9 @@ public class OrderControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
+  @Autowired
+  private OrderController controller;
+
   @MockBean
   private OrderService service;
 
@@ -70,8 +73,7 @@ public class OrderControllerTest {
   public void shouldFindOrderById() throws Exception {
     Order order = new Order(OrderConstants.ORDER);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.APPROVED.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
     String urlTemplate = "/orders/" + order.getId();
 
     when(service.findById(order.getId())).thenReturn(Optional.of(order));
@@ -142,8 +144,7 @@ public class OrderControllerTest {
 
     when(service.cancel(order.getId())).thenReturn(Optional.of(order));
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.CANCELLED.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
 
     mockMvc.perform(post("/orders/1/cancel")).andDo(print()).andExpect(status().isOk())
         .andExpect(content().string(objectMapper.writeValueAsString(response)));
@@ -177,6 +178,7 @@ public class OrderControllerTest {
       }
     };
     Order revisedOrder = new Order(order.getId(), order.getConsumerId(), order.getRestaurant(), orderItemsRevised);
+    revisedOrder.setOrderState(OrderState.APPROVED);
 
     OrderRevision orderRevision = new OrderRevision(new HashMap<>() {
       {
@@ -188,8 +190,7 @@ public class OrderControllerTest {
         put(orderItem.getMenuItemId(), revisedQuantity);
       }
     });
-    GetOrderResponse response = new GetOrderResponse(revisedOrder.getId(), revisedOrder.getOrderTotal(),
-        revisedOrder.getRestaurant().getName(), OrderState.APPROVED.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(revisedOrder);
 
     when(service.revise(order.getId(), orderRevision)).thenReturn(Optional.of(revisedOrder));
 
@@ -228,8 +229,7 @@ public class OrderControllerTest {
     order.setOrderState(OrderState.ACCEPTED);
     LocalDateTime readyBy = LOCAL_DATE_TIME.plusHours(1L);
     AcceptOrderRequest request = new AcceptOrderRequest(readyBy);
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.ACCEPTED.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
     when(service.accept(order.getId(), new OrderAcceptance(readyBy))).thenReturn(Optional.of(order));
 
     mockMvc
@@ -270,8 +270,7 @@ public class OrderControllerTest {
     Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.PREPARING);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.PREPARING.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
 
     when(service.preparing(order.getId())).thenReturn(Optional.of(order));
 
@@ -298,9 +297,7 @@ public class OrderControllerTest {
     Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.READY_FOR_PICKUP);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(),
-        order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.READY_FOR_PICKUP.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
 
     when(service.readyForPickup(order.getId())).thenReturn(Optional.of(order));
 
@@ -327,8 +324,7 @@ public class OrderControllerTest {
     Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.PICKED_UP);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.PICKED_UP.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
 
     when(service.pickedUp(order.getId())).thenReturn(Optional.of(order));
 
@@ -355,8 +351,7 @@ public class OrderControllerTest {
     Order order = new Order(OrderConstants.ORDER);
     order.setOrderState(OrderState.DELIVERED);
 
-    GetOrderResponse response = new GetOrderResponse(order.getId(), order.getOrderTotal(),
-        order.getRestaurant().getName(), OrderState.DELIVERED.name());
+    GetOrderResponse response = controller.makeGetOrderResponse(order);
 
     when(service.delivered(order.getId())).thenReturn(Optional.of(order));
 

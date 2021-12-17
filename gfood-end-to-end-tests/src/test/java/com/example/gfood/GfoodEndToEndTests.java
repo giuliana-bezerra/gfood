@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,11 @@ import com.example.gfood.common.PersonName;
 import com.example.gfood.consumerservice.api.CreateConsumerRequest;
 import com.example.gfood.consumerservice.api.CreateConsumerResponse;
 import com.example.gfood.consumerservice.api.GetConsumerResponse;
+import com.example.gfood.courierservice.api.CreateCourierRequest;
+import com.example.gfood.courierservice.api.GetCourierResponse;
+import com.example.gfood.courierservice.api.UpdateCourierRequest;
+import com.example.gfood.domain.ActionType;
+import com.example.gfood.orderservice.api.AcceptOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderRequest;
 import com.example.gfood.orderservice.api.CreateOrderResponse;
 import com.example.gfood.orderservice.api.GetOrderResponse;
@@ -26,6 +32,7 @@ import com.example.gfood.restaurantservice.api.GetRestaurantResponse;
 import com.example.gfood.restaurantservice.api.MenuItemDTO;
 import com.example.gfood.restaurantservice.api.RestaurantMenuDTO;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -37,9 +44,12 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 
 @SpringBootTest(classes = { GfoodEndToEndTests.Config.class }, webEnvironment = WebEnvironment.RANDOM_PORT)
 public class GfoodEndToEndTests extends GfoodServices {
+	private final static LocalDateTime LOCAL_DATE_TIME = LocalDateTime.now();
+
 	public static final String MENU_ITEM_ID = "1";
 	public static final String MENU_ITEM_NAME = "Chicken Vindaloo";
 	public static final Money MENU_ITEM_PRICE = new Money("12.34");
@@ -48,21 +58,15 @@ public class GfoodEndToEndTests extends GfoodServices {
 	public static final String RESTAURANT_NAME = "My Restaurant";
 	private static final Address RESTAURANT_ADDRESS = new Address("1 High Street", null, "Oakland", "CA", "94619");
 
-	private String host = "localhost";
-	@LocalServerPort
-	private int port;
-
 	@Autowired
 	private TestRestTemplate restTemplate;
 
-	@EnableAutoConfiguration
-	@ComponentScan
-	public static class Config {
-	}
+	@LocalServerPort
+	private int port;
 
 	@Override
 	public String getHost() {
-		return host;
+		return "localhost";
 	}
 
 	@Override
@@ -70,11 +74,32 @@ public class GfoodEndToEndTests extends GfoodServices {
 		return port;
 	}
 
+	@EnableAutoConfiguration
+	@ComponentScan
+	public static class Config {
+	}
+
+	@BeforeEach
+	public void init() {
+		restTemplate.getRestTemplate().setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+	}
+
 	@Test
 	public void shouldCreateReviseAndCancelOrder() {
 		Long orderId = createOrderProcess();
 		reviseOrderProcess(orderId);
 		cancelOrderProcess(orderId);
+	}
+
+	@Test
+	public void shouldDeliverOrder() {
+		Long courierId = createCourierProcess();
+		Long orderId = createOrderProcess();
+		acceptOrderProcess(orderId, courierId);
+		preparingOrderProcess(orderId);
+		orderReadyForPickupProcess(orderId);
+		pickupOrderProcess(orderId);
+		deliverOrderProcess(orderId);
 	}
 
 	private Long createOrderProcess() {
@@ -210,5 +235,147 @@ public class GfoodEndToEndTests extends GfoodServices {
 		assertNotNull(response);
 		assertEquals(orderId, response.getId());
 		assertEquals(OrderState.CANCELLED.name(), response.getState());
+	}
+
+	private Long createCourierProcess() {
+		Long courierId = createCourier();
+		setCourierAvailable(courierId);
+		verifyCourierAvailable(courierId);
+		return courierId;
+	}
+
+	private Long createCourier() {
+		CreateCourierRequest request = new CreateCourierRequest(new PersonName("firstName", "lastName"), new Address());
+		GetCourierResponse response = this.restTemplate.postForObject(courierBaseUrl(), request, GetCourierResponse.class);
+		assertNotNull(response);
+		Long courierId = response.getId();
+		assertTrue(courierId > 0);
+		return courierId;
+	}
+
+	private void setCourierAvailable(Long courierId) {
+		UpdateCourierRequest request = new UpdateCourierRequest(true);
+		GetCourierResponse response = this.restTemplate
+				.patchForObject(courierBaseUrl(courierId.toString()), request,
+						GetCourierResponse.class);
+		assertNotNull(response);
+		assertEquals(courierId, response.getId());
+		assertTrue(response.getAvailable());
+	}
+
+	private void verifyCourierAvailable(Long courierId) {
+		GetCourierResponse response = this.restTemplate.getForObject(courierBaseUrl(courierId.toString()),
+				GetCourierResponse.class);
+		assertNotNull(response);
+		assertEquals(courierId, response.getId());
+		assertTrue(response.getAvailable());
+	}
+
+	private void acceptOrderProcess(Long orderId, Long courierId) {
+		acceptOrder(orderId);
+		verifyOrderAssignedToCourier(orderId, courierId);
+	}
+
+	private void acceptOrder(Long orderId) {
+		AcceptOrderRequest request = new AcceptOrderRequest(LOCAL_DATE_TIME.plusHours(1L));
+		GetOrderResponse response = this.restTemplate.postForObject(orderBaseUrl(orderId.toString(), "accept"), request,
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.ACCEPTED.name(), response.getState());
+	}
+
+	private void verifyOrderAssignedToCourier(Long orderId, Long courierId) {
+		GetOrderResponse response = this.restTemplate.getForObject(orderBaseUrl(orderId.toString()),
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(courierId, response.getAssignedCourier());
+		assertEquals(ActionType.PICKUP, response.getCourierActions().get(0).getType());
+		assertEquals(ActionType.DROPOFF, response.getCourierActions().get(1).getType());
+	}
+
+	private void preparingOrderProcess(Long orderId) {
+		preparingOrder(orderId);
+		verifyPreparingOrder(orderId);
+	}
+
+	private void preparingOrder(Long orderId) {
+		GetOrderResponse response = this.restTemplate.postForObject(orderBaseUrl(orderId.toString(), "preparing"), null,
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.PREPARING.name(), response.getState());
+	}
+
+	private void verifyPreparingOrder(Long orderId) {
+		GetOrderResponse response = this.restTemplate.getForObject(orderBaseUrl(orderId.toString()),
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.PREPARING.name(), response.getState());
+	}
+
+	private void orderReadyForPickupProcess(Long orderId) {
+		orderReadyForPickup(orderId);
+		verifyOrderReadyForPickup(orderId);
+	}
+
+	private void orderReadyForPickup(Long orderId) {
+		GetOrderResponse response = this.restTemplate.postForObject(orderBaseUrl(orderId.toString(), "ready"), null,
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.READY_FOR_PICKUP.name(), response.getState());
+	}
+
+	private void verifyOrderReadyForPickup(Long orderId) {
+		GetOrderResponse response = this.restTemplate.getForObject(orderBaseUrl(orderId.toString()),
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.READY_FOR_PICKUP.name(), response.getState());
+	}
+
+	private void pickupOrderProcess(Long orderId) {
+		pickupOrder(orderId);
+		verifyOrderPickedUp(orderId);
+	}
+
+	private void pickupOrder(Long orderId) {
+		GetOrderResponse response = this.restTemplate.postForObject(orderBaseUrl(orderId.toString(), "pickedup"), null,
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.PICKED_UP.name(), response.getState());
+	}
+
+	private void verifyOrderPickedUp(Long orderId) {
+		GetOrderResponse response = this.restTemplate.getForObject(orderBaseUrl(orderId.toString()),
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.PICKED_UP.name(), response.getState());
+	}
+
+	private void deliverOrderProcess(Long orderId) {
+		deliverOrder(orderId);
+		verifyOrderDelivered(orderId);
+	}
+
+	private void deliverOrder(Long orderId) {
+		GetOrderResponse response = this.restTemplate.postForObject(orderBaseUrl(orderId.toString(), "delivered"), null,
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.DELIVERED.name(), response.getState());
+	}
+
+	private void verifyOrderDelivered(Long orderId) {
+		GetOrderResponse response = this.restTemplate.getForObject(orderBaseUrl(orderId.toString()),
+				GetOrderResponse.class);
+		assertNotNull(response);
+		assertEquals(orderId, response.getId());
+		assertEquals(OrderState.DELIVERED.name(), response.getState());
 	}
 }

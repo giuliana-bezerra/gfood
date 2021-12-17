@@ -2,6 +2,7 @@ package com.example.gfood.domain;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
@@ -51,6 +52,10 @@ public class Courier {
     this.id = id;
     this.name = name;
     this.address = address;
+  }
+
+  public List<Action> getActionsForDelivery(Order order) {
+    return actions.stream().filter(action -> action.isActionForOrder(order)).collect(Collectors.toList());
   }
 
   public Long getId() {

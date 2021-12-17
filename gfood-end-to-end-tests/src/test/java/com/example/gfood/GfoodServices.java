@@ -35,4 +35,8 @@ public abstract class GfoodServices {
   protected String orderBaseUrl(String... pathParam) {
     return baseUrl(getApplicationPort(), "orders", pathParam);
   }
+
+  protected String courierBaseUrl(String... pathParam) {
+    return baseUrl(getApplicationPort(), "couriers", pathParam);
+  }
 }

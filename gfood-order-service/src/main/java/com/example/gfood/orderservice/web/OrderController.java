@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import com.example.gfood.common.HttpError;
 import com.example.gfood.common.UnsupportedStateTransitionException;
 import com.example.gfood.courierservice.domain.NoCouriersAvailableException;
+import com.example.gfood.domain.Order;
 import com.example.gfood.domain.OrderAcceptance;
 import com.example.gfood.domain.OrderRevision;
 import com.example.gfood.orderservice.api.AcceptOrderRequest;
@@ -36,16 +37,14 @@ public class OrderController {
   @RequestMapping(path = "/{orderId}", method = RequestMethod.GET, produces = { "application/json; charset=UTF-8" })
   public ResponseEntity<GetOrderResponse> get(@PathVariable Long orderId) {
     return orderService.findById(orderId)
-        .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-            order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+        .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
         .orElseGet(() -> new ResponseEntity<>(HttpStatus.NO_CONTENT));
   }
 
   @RequestMapping(method = RequestMethod.GET)
   public ResponseEntity<List<GetOrderResponse>> list(@RequestParam Long consumerId) {
     List<GetOrderResponse> response = orderService.list(consumerId).stream()
-        .map(order -> new GetOrderResponse(order.getId(), order.getOrderTotal(), order.getRestaurant().getName(),
-            order.getOrderState().name()))
+        .map(order -> makeGetOrderResponse(order))
         .collect(Collectors.toList());
 
     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -64,8 +63,7 @@ public class OrderController {
   public ResponseEntity cancel(@PathVariable Long orderId) {
     try {
       return orderService.cancel(orderId)
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -78,8 +76,7 @@ public class OrderController {
   public ResponseEntity revise(@PathVariable Long orderId, @RequestBody @Valid ReviseOrderRequest reviseOrderRequest) {
     try {
       return orderService.revise(orderId, new OrderRevision(reviseOrderRequest.getRevisedItemQuantities()))
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -92,8 +89,7 @@ public class OrderController {
   public ResponseEntity accept(@PathVariable Long orderId, @RequestBody @Valid AcceptOrderRequest acceptOrderRequest) {
     try {
       return orderService.accept(orderId, new OrderAcceptance(acceptOrderRequest.getReadyBy()))
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -112,8 +108,7 @@ public class OrderController {
   public ResponseEntity preparing(@PathVariable Long orderId) {
     try {
       return orderService.preparing(orderId)
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -126,8 +121,7 @@ public class OrderController {
   public ResponseEntity ready(@PathVariable Long orderId) {
     try {
       return orderService.readyForPickup(orderId)
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -140,8 +134,7 @@ public class OrderController {
   public ResponseEntity pickedup(@PathVariable Long orderId) {
     try {
       return orderService.pickedUp(orderId)
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
@@ -154,13 +147,22 @@ public class OrderController {
   public ResponseEntity delivered(@PathVariable Long orderId) {
     try {
       return orderService.delivered(orderId)
-          .map(order -> new ResponseEntity<GetOrderResponse>(new GetOrderResponse(order.getId(), order.getOrderTotal(),
-              order.getRestaurant().getName(), order.getOrderState().name()), HttpStatus.OK))
+          .map(order -> new ResponseEntity<GetOrderResponse>(makeGetOrderResponse(order), HttpStatus.OK))
           .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     } catch (UnsupportedStateTransitionException e) {
       return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new HttpError(
           "Invalid order state for delivered - " + e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
+  }
+
+  public GetOrderResponse makeGetOrderResponse(Order order) {
+    return new GetOrderResponse(order.getId(),
+        order.getOrderTotal(),
+        order.getRestaurant().getName(),
+        order.getOrderState().name(),
+        order.getAssignedCourier() == null ? null : order.getAssignedCourier().getId(),
+        order.getAssignedCourier() == null ? null
+            : order.getAssignedCourier().getActionsForDelivery(order));
   }
 
 }
